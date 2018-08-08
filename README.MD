@@ -10,6 +10,28 @@ A kimásolt URL-t illesszük be egy új böngésző ablakba, de írjuk át a leg
 
 Mentsük le JSON fájlként a kapott eredményt.
 
-A lementett, tranzakció listát tartalmazó, JSON fájlt kell megadni a `TransactionDataLinkExtractor.main()` futtatása során első parancssori argumentumként. A standard output-ra kiíródnak azok a linkek amelyek a tranzakciók részletes adatait tartalmazzák.
+A lementett, tranzakció listát tartalmazó, JSON fájl elérési útvonalát kell megadni a `TransactionDetailLinksExtractor.main()` futtatása során első parancssori argumentumként. A `logback.xml` fájlban konfigurált `metlifefundhistory.log`-ba kiíródnak azok a linkek amelyek a tranzakciók részletes adatait tartalmazzák.
 
-Ezeket egyesével meg kell nyitni a böngészőben, úgy hogy egy külön fülön be vagyunk jelentkezve a MyMetLife oldalra. Majd menteni JSON fájlként.
+Ezeket egyesével meg kell nyitni a böngészőben, úgy hogy egy külön fülön be vagyunk jelentkezve a MyMetLife oldalra. Majd menteni a tranzakció részleteket, JSON fájlként egy külön directory-ba. A következő lépésben ezt a directory-t fogjuk használni.
+
+## Második lépés - Tranzakciók feldolgozása, eredmények mentése
+
+Az előző lépésben mentett tranzakció részleteket tartalmazó directory-t kell megadni a `TransactionHistoryProcessor.main()` futtatása során első parancssori argumentumként. 
+
+Opcionálisan megadható egy második argumentum is, mely az élő alapok aktuális értékének kiszámításához használt árfolyamokat tartalmazza XML formátumban. Példa:
+```xml
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="RATES_DATE">2018.07.30</entry>
+  <entry key="Salsa latin-amerikai (HUF)">1.06804</entry>
+  <entry key="Magyar kötvény">3.98892</entry>
+  <entry key="Euromix">2.61734</entry>
+  <entry key="Globális részvény">1.65889</entry>
+  <entry key="Egyensúly globális kötvény">1.04378</entry>
+</properties>
+```
+
+Az eredmények XLSX formátumban a `results.xlsx` fájlba kerülnek az első parancssori argumentumban megadott directory mellé.
+
+A `metlifefundhistory.log`-ban részletek találhatóak a feldolgozásról.
