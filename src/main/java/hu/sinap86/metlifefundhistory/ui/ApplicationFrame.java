@@ -1,11 +1,11 @@
 package hu.sinap86.metlifefundhistory.ui;
 
 import hu.sinap86.metlifefundhistory.util.Constants;
+import hu.sinap86.metlifefundhistory.web.WebRequestManager;
 
 import lombok.extern.slf4j.Slf4j;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 
@@ -15,6 +15,8 @@ import javax.swing.text.html.HTMLEditorKit;
 
 @Slf4j
 public class ApplicationFrame extends JFrame {
+
+    private final WebRequestManager webRequestManager = new WebRequestManager();
 
     public ApplicationFrame() {
         initUI();
@@ -56,13 +58,13 @@ public class ApplicationFrame extends JFrame {
         fileMenu.setMnemonic(KeyEvent.VK_F);
 
         JMenuItem settingsMenuItem = addMenuItem(fileMenu, "Beállítások", KeyEvent.VK_B);
-        settingsMenuItem.addActionListener(e -> {
+        settingsMenuItem.addActionListener(event -> {
             final SettingsDialog settingsDialog = new SettingsDialog(this);
             settingsDialog.setVisible(true);
         });
 
         JMenuItem exitMenuItem = addMenuItem(fileMenu, "Kilépés", KeyEvent.VK_K);
-        exitMenuItem.addActionListener((ActionEvent event) -> {
+        exitMenuItem.addActionListener(event -> {
             System.exit(0);
         });
 
@@ -74,10 +76,20 @@ public class ApplicationFrame extends JFrame {
 
         JMenuItem queryAndCreateReportMenuItem = addMenuItem(reportMenu, "Online adatlekérdezés és riport generálás", KeyEvent.VK_O);
         queryAndCreateReportMenuItem.setToolTipText("Befektetési alap tranzakciós adatok lekérdezése, majd mentése a MetLife renszeréből valamint Excel riport készítése");
+        queryAndCreateReportMenuItem.addActionListener(event -> {
+            if (webRequestManager.isAuthenticated()) {
+                showTransactionHistoryQuerySettingsDialog();
+            } else {
+                final LoginDialog loginDialog = new LoginDialog(this, webRequestManager);
+                loginDialog.setVisible(true);
+
+                showTransactionHistoryQuerySettingsDialog();
+            }
+        });
 
         JMenu helpMenu = new JMenu("Súgó");
         JMenuItem aboutMenuItem = addMenuItem(helpMenu, "Névjegy", KeyEvent.VK_N);
-        aboutMenuItem.addActionListener(e -> {
+        aboutMenuItem.addActionListener(event -> {
             JOptionPane optionPane = new JOptionPane();
             optionPane.setMessage("<html>MetLifeFundHistory v1.0<br>Készítette: Sinka László<br>Email: <a href=\"mailto:sinap86@gmail.com\">sinap86@gmail.com</a></html>");
             optionPane.setMessageType(JOptionPane.INFORMATION_MESSAGE);
@@ -92,6 +104,18 @@ public class ApplicationFrame extends JFrame {
         menuBar.add(helpMenu);
 
         setJMenuBar(menuBar);
+    }
+
+    private void showTransactionHistoryQuerySettingsDialog() {
+        if (!webRequestManager.isAuthenticated()) {
+            return;
+        }
+
+        // TODO show dialog
+        // - choose from contracts
+        // - set query from and to date
+        // - output directory
+        log.debug("showTransactionHistoryQuerySettingsDialog");
     }
 
     private JMenuItem addMenuItem(final JMenu menu, final String text, final int mnemonic) {

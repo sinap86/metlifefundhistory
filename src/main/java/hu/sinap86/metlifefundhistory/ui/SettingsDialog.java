@@ -93,7 +93,7 @@ public class SettingsDialog extends JDialog {
         });
 
         btnSave = new JButton("Mentés");
-        btnSave.addActionListener((ActionEvent event) -> {
+        btnSave.addActionListener(event -> {
             final boolean useProxy = chkUseProxy.isSelected();
             ApplicationConfig.getInstance().setUseProxy(useProxy);
             if (useProxy) {
@@ -101,7 +101,7 @@ public class SettingsDialog extends JDialog {
                 ApplicationConfig.getInstance().setProxyPort(ntfProxyPort.getNumber());
                 ApplicationConfig.getInstance().setProxyScheme((String) cbProxyScheme.getSelectedItem());
             }
-            JOptionPane.showMessageDialog(this,
+            JOptionPane.showMessageDialog(SettingsDialog.this,
                                           "Sikeres mentés!",
                                           "Beállítások",
                                           JOptionPane.INFORMATION_MESSAGE);
