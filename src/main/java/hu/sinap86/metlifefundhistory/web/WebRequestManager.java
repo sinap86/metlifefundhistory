@@ -1,6 +1,9 @@
 package hu.sinap86.metlifefundhistory.web;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Collection;
 
 // TODO call MetLife through REST api
 @Slf4j
@@ -31,5 +34,9 @@ public class WebRequestManager {
         authenticationWithSmsOtpSucceeded = "1".equals(smsOtp);
         log.debug("Authenticate with sms OTP {}", (authenticationWithSmsOtpSucceeded ? "succeeded." : "NOT succeeded."));
         return authenticationWithSmsOtpSucceeded;
+    }
+
+    public Collection<String> getUserContracts() {
+        return Lists.newArrayList("00177736");
     }
 }

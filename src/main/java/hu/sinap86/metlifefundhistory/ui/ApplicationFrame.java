@@ -83,7 +83,11 @@ public class ApplicationFrame extends JFrame {
                 final LoginDialog loginDialog = new LoginDialog(this, webRequestManager);
                 loginDialog.setVisible(true);
 
-                showTransactionHistoryQuerySettingsDialog();
+                if (webRequestManager.isAuthenticated()) {
+                    // TODO show user and contract information instead of UsageDescription
+
+                    showTransactionHistoryQuerySettingsDialog();
+                }
             }
         });
 
@@ -93,8 +97,8 @@ public class ApplicationFrame extends JFrame {
             JOptionPane optionPane = new JOptionPane();
             optionPane.setMessage("<html>MetLifeFundHistory v1.0<br>Készítette: Sinka László<br>Email: <a href=\"mailto:sinap86@gmail.com\">sinap86@gmail.com</a></html>");
             optionPane.setMessageType(JOptionPane.INFORMATION_MESSAGE);
-            JDialog dialog = optionPane.createDialog(this, "Névjegy");
-            dialog.setVisible(true);
+            final JDialog aboutDialog = optionPane.createDialog(this, "Névjegy");
+            aboutDialog.setVisible(true);
         });
 
         menuBar.add(fileMenu);
@@ -107,15 +111,8 @@ public class ApplicationFrame extends JFrame {
     }
 
     private void showTransactionHistoryQuerySettingsDialog() {
-        if (!webRequestManager.isAuthenticated()) {
-            return;
-        }
-
-        // TODO show dialog
-        // - choose from contracts
-        // - set query from and to date
-        // - output directory
-        log.debug("showTransactionHistoryQuerySettingsDialog");
+        final TransactionHistoryQuerySettingsDialog transactionHistoryQuerySettingsDialog = new TransactionHistoryQuerySettingsDialog(this, webRequestManager);
+        transactionHistoryQuerySettingsDialog.setVisible(true);
     }
 
     private JMenuItem addMenuItem(final JMenu menu, final String text, final int mnemonic) {
