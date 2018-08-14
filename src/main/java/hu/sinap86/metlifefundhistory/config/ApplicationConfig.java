@@ -1,5 +1,7 @@
 package hu.sinap86.metlifefundhistory.config;
 
+import hu.sinap86.metlifefundhistory.util.Constants;
+
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -45,7 +47,7 @@ public class ApplicationConfig {
     }
 
     public Long getProxyPort() {
-        return preferences.getLong(CONFIG_PROXY_PORT, 8080);
+        return preferences.getLong(CONFIG_PROXY_PORT, 80);
     }
 
     public void setProxyPort(final Long proxyPort) {
@@ -54,7 +56,7 @@ public class ApplicationConfig {
     }
 
     public String getProxyScheme() {
-        return preferences.get(CONFIG_PROXY_SCHEME, StringUtils.EMPTY);
+        return preferences.get(CONFIG_PROXY_SCHEME, Constants.SUPPORTED_PROXY_SCHEMES[0]);
     }
 
     public void setProxyScheme(final String proxyScheme) {

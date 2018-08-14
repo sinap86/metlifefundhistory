@@ -1,5 +1,8 @@
 package hu.sinap86.metlifefundhistory.ui;
 
+import hu.sinap86.metlifefundhistory.ui.dialog.LoginDialog;
+import hu.sinap86.metlifefundhistory.ui.dialog.SettingsDialog;
+import hu.sinap86.metlifefundhistory.ui.dialog.TransactionHistoryQuerySettingsDialog;
 import hu.sinap86.metlifefundhistory.util.Constants;
 import hu.sinap86.metlifefundhistory.web.WebRequestManager;
 
