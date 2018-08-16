@@ -11,33 +11,45 @@ import javax.swing.*;
 
 public class SettingsDialog extends BaseDialog {
 
+    private JCheckBox chkUseProxy;
+    private JTextField tfProxyHost;
+    private JNumberTextField ntfProxyPort;
+    private JComboBox<String> cbProxyScheme;
+
     public SettingsDialog(final Frame owner) {
         super(owner, "Beállítások", true);
 
         final boolean hasSavedProxySettings = ApplicationConfig.getInstance().isUseProxy();
 
+        getContentPane().add(createProxyPanel(hasSavedProxySettings), BorderLayout.NORTH);
+        getContentPane().add(createButtonPanel(), BorderLayout.CENTER);
+
+        postConstruct(owner);
+    }
+
+    private JPanel createProxyPanel(final boolean hasSavedProxySettings) {
         final JPanel proxyPanel = new JPanel(new GridBagLayout());
 
-        final JCheckBox chkUseProxy = new JCheckBox("Proxy használat");
+        chkUseProxy = new JCheckBox("Proxy használat");
         chkUseProxy.setSelected(hasSavedProxySettings);
         addComponent(chkUseProxy, proxyPanel, 0, 0);
 
         addLabel("Hoszt:", proxyPanel, 1, 0);
 
-        final JTextField tfProxyHost = addTextField(20, proxyPanel, 1, 1);
+        tfProxyHost = addTextField(20, proxyPanel, 1, 1);
         tfProxyHost.setEnabled(hasSavedProxySettings);
         tfProxyHost.setText(ApplicationConfig.getInstance().getProxyHost());
 
         addLabel("Port:", proxyPanel, 2, 0);
 
-        final JNumberTextField ntfProxyPort = new JNumberTextField();
+        ntfProxyPort = new JNumberTextField();
         ntfProxyPort.setEnabled(hasSavedProxySettings);
         ntfProxyPort.setNumber(ApplicationConfig.getInstance().getProxyPort());
         addComponent(ntfProxyPort, proxyPanel, 2, 1);
 
         addLabel("Séma:", proxyPanel, 3, 0);
 
-        final JComboBox<String> cbProxyScheme = new JComboBox<>(Constants.SUPPORTED_PROXY_SCHEMES);
+        cbProxyScheme = new JComboBox<>(Constants.SUPPORTED_PROXY_SCHEMES);
         cbProxyScheme.setSelectedIndex(0);
         cbProxyScheme.setEnabled(hasSavedProxySettings);
         cbProxyScheme.setSelectedItem(ApplicationConfig.getInstance().getProxyScheme());
@@ -52,6 +64,10 @@ public class SettingsDialog extends BaseDialog {
             repaint();
         });
 
+        return proxyPanel;
+    }
+
+    private JPanel createButtonPanel() {
         final JButton btnSave = new JButton("Mentés");
         btnSave.addActionListener(event -> {
             final boolean useProxy = chkUseProxy.isSelected();
@@ -71,11 +87,7 @@ public class SettingsDialog extends BaseDialog {
 
         final JPanel buttonPanel = new JPanel();
         buttonPanel.add(btnSave);
-
-        getContentPane().add(proxyPanel, BorderLayout.NORTH);
-        getContentPane().add(buttonPanel, BorderLayout.CENTER);
-
-        postConstruct(owner);
+        return buttonPanel;
     }
 
 }

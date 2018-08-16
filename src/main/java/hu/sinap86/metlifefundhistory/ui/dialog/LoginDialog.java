@@ -15,34 +15,47 @@ import javax.swing.border.EtchedBorder;
 public class LoginDialog extends BaseDialog {
 
     private final WebRequestManager webRequestManager;
-    private final JTextField tfName;
-    private final JPasswordField pfPassword;
-    private final JTextField tfSmsOtp;
-    private final JButton btnLogin;
+    private JTextField tfName;
+    private JPasswordField pfPassword;
+    private JTextField tfSmsOtp;
+    private JButton btnLogin;
 
     public LoginDialog(final JFrame owner, final WebRequestManager webRequestManager) {
         super(owner, "Bejelentkezés", true);
         this.webRequestManager = webRequestManager;
+
         final boolean authenticationWithPasswordSucceeded = webRequestManager.isAuthenticationWithPasswordSucceeded();
 
-        final JPanel topPanel = new JPanel(new GridBagLayout());
+        getContentPane().add(createPasswordPanel(authenticationWithPasswordSucceeded), BorderLayout.NORTH);
+        getContentPane().add(createButtonPanel(authenticationWithPasswordSucceeded), BorderLayout.CENTER);
 
-        addLabel("Felhasználó név:", topPanel, 0, 0);
+        postConstruct(owner);
+    }
 
-        tfName = addTextField(20, topPanel, 0, 1);
+    private JPanel createPasswordPanel(final boolean authenticationWithPasswordSucceeded) {
+        final JPanel passwordPanel = new JPanel(new GridBagLayout());
+
+        addLabel("Felhasználó név:", passwordPanel, 0, 0);
+
+        tfName = addTextField(20, passwordPanel, 0, 1);
         tfName.setEnabled(!authenticationWithPasswordSucceeded);
 
-        addLabel("Jelszó:", topPanel, 1, 0);
+        addLabel("Jelszó:", passwordPanel, 1, 0);
 
         pfPassword = new JPasswordField(20);
         pfPassword.setEnabled(!authenticationWithPasswordSucceeded);
-        addComponent(pfPassword, topPanel, 1, 1);
+        addComponent(pfPassword, passwordPanel, 1, 1);
 
-        addLabel("SMS-ben kapott jelszó:", topPanel, 2, 0);
+        addLabel("SMS-ben kapott jelszó:", passwordPanel, 2, 0);
 
-        tfSmsOtp = addTextField(20, topPanel, 2, 1);
+        tfSmsOtp = addTextField(20, passwordPanel, 2, 1);
         tfSmsOtp.setEnabled(authenticationWithPasswordSucceeded);
 
+        passwordPanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
+        return passwordPanel;
+    }
+
+    private JPanel createButtonPanel(final boolean authenticationWithPasswordSucceeded) {
         btnLogin = new JButton(authenticationWithPasswordSucceeded ? "Bejelentkezés" : "Tovább a második lépéshez");
         btnLogin.addActionListener(new LoginButtonActionListener());
 
@@ -52,16 +65,10 @@ public class LoginDialog extends BaseDialog {
             dispose();
         });
 
-        topPanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
-
         final JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.add(btnLogin);
         buttonPanel.add(btnCancel);
-
-        getContentPane().add(topPanel, BorderLayout.NORTH);
-        getContentPane().add(buttonPanel, BorderLayout.CENTER);
-
-        postConstruct(owner);
+        return buttonPanel;
     }
 
     private class LoginButtonActionListener implements ActionListener {

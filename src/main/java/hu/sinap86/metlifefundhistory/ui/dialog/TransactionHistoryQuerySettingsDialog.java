@@ -17,41 +17,49 @@ import javax.swing.*;
 public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
 
     private TransactionHistoryQuerySettings querySettings;
-
-    final JComboBox<String> cbContracts;
-    final DatePicker dpFromDate;
-    final DatePicker dpToDate;
-    private final JTextField tfSelectedDirectory;
     private File transactionHistoryDirectory;
+
+    private JComboBox<String> cbContracts;
+    private DatePicker dpFromDate;
+    private DatePicker dpToDate;
+    private JTextField tfSelectedDirectory;
 
     public TransactionHistoryQuerySettingsDialog(final Frame owner, final WebRequestManager webRequestManager) {
         super(owner, "Lekérdezés beállítások", true);
+
         final Collection<String> contracts = webRequestManager.getUserContracts();
 
-        final JPanel topPanel = new JPanel(new GridBagLayout());
+        getContentPane().add(createQuerySettingsPanel(contracts), BorderLayout.NORTH);
+        getContentPane().add(createButtonPanel(), BorderLayout.CENTER);
 
-        addLabel("Szerződések:", topPanel, 0, 0);
+        postConstruct(owner);
+    }
+
+    private JPanel createQuerySettingsPanel(final Collection<String> contracts) {
+        final JPanel querySettingsPanel = new JPanel(new GridBagLayout());
+
+        addLabel("Szerződések:", querySettingsPanel, 0, 0);
 
         cbContracts = new JComboBox<>(contracts.toArray(new String[]{}));
         cbContracts.setSelectedIndex(0);
         cbContracts.setEnabled(CollectionUtils.size(contracts) > 1);
         cbContracts.setPreferredSize(new Dimension(100, 26));
-        addComponent(cbContracts, topPanel, 0, 1, 2);
+        addComponent(cbContracts, querySettingsPanel, 0, 1, 2);
 
-        addLabel("Kezdő dátum:", topPanel, 1, 0);
+        addLabel("Kezdő dátum:", querySettingsPanel, 1, 0);
 
         dpFromDate = createDatePicker();
-        addComponent(dpFromDate, topPanel, 1, 1, 2);
+        addComponent(dpFromDate, querySettingsPanel, 1, 1, 2);
 
-        addLabel("Végdátum:", topPanel, 2, 0);
+        addLabel("Végdátum:", querySettingsPanel, 2, 0);
 
         dpToDate = createDatePicker();
         dpToDate.setDateToToday();
-        addComponent(dpToDate, topPanel, 2, 1, 2);
+        addComponent(dpToDate, querySettingsPanel, 2, 1, 2);
 
-        addLabel("Adatok mentése ide:", topPanel, 3, 0);
+        addLabel("Adatok mentése ide:", querySettingsPanel, 3, 0);
 
-        tfSelectedDirectory = addTextField(20, topPanel, 3, 1);
+        tfSelectedDirectory = addTextField(20, querySettingsPanel, 3, 1);
         tfSelectedDirectory.setEnabled(false);
         tfSelectedDirectory.setPreferredSize(new Dimension(100, 26));
 
@@ -65,8 +73,11 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
                 tfSelectedDirectory.setText(StringUtils.EMPTY);
             }
         });
-        addComponent(btnChooseDirectory, topPanel, 3, 2);
+        addComponent(btnChooseDirectory, querySettingsPanel, 3, 2);
+        return querySettingsPanel;
+    }
 
+    private JPanel createButtonPanel() {
         final JButton btnQuery = new JButton("Lekérdez");
         btnQuery.addActionListener(event -> {
             if (validateUserInput()) {
@@ -91,11 +102,7 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
         final JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.add(btnQuery);
         buttonPanel.add(btnCancel);
-
-        getContentPane().add(topPanel, BorderLayout.NORTH);
-        getContentPane().add(buttonPanel, BorderLayout.CENTER);
-
-        postConstruct(owner);
+        return buttonPanel;
     }
 
     private boolean validateUserInput() {
