@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
@@ -39,17 +40,20 @@ public class LoginDialog extends BaseDialog {
 
         tfName = addTextField(20, passwordPanel, 0, 1);
         tfName.setEnabled(!authenticationWithPasswordSucceeded);
+        addFocusTraversalKey(tfName, KeyEvent.VK_ENTER);
 
         addLabel("Jelszó:", passwordPanel, 1, 0);
 
         pfPassword = new JPasswordField(20);
         pfPassword.setEnabled(!authenticationWithPasswordSucceeded);
+        addFocusTraversalKey(pfPassword, KeyEvent.VK_ENTER);
         addComponent(pfPassword, passwordPanel, 1, 1);
 
         addLabel("SMS-ben kapott jelszó:", passwordPanel, 2, 0);
 
         tfSmsOtp = addTextField(20, passwordPanel, 2, 1);
         tfSmsOtp.setEnabled(authenticationWithPasswordSucceeded);
+        addFocusTraversalKey(tfSmsOtp, KeyEvent.VK_ENTER);
 
         passwordPanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
         return passwordPanel;

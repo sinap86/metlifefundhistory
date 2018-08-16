@@ -6,6 +6,7 @@ import hu.sinap86.metlifefundhistory.util.Constants;
 
 import java.awt.*;
 import java.awt.event.ItemEvent;
+import java.awt.event.KeyEvent;
 
 import javax.swing.*;
 
@@ -39,12 +40,14 @@ public class SettingsDialog extends BaseDialog {
         tfProxyHost = addTextField(20, proxyPanel, 1, 1);
         tfProxyHost.setEnabled(hasSavedProxySettings);
         tfProxyHost.setText(ApplicationConfig.getInstance().getProxyHost());
+        addFocusTraversalKey(tfProxyHost, KeyEvent.VK_ENTER);
 
         addLabel("Port:", proxyPanel, 2, 0);
 
         ntfProxyPort = new JNumberTextField();
         ntfProxyPort.setEnabled(hasSavedProxySettings);
         ntfProxyPort.setNumber(ApplicationConfig.getInstance().getProxyPort());
+        addFocusTraversalKey(ntfProxyPort, KeyEvent.VK_ENTER);
         addComponent(ntfProxyPort, proxyPanel, 2, 1);
 
         addLabel("Séma:", proxyPanel, 3, 0);
@@ -53,6 +56,7 @@ public class SettingsDialog extends BaseDialog {
         cbProxyScheme.setSelectedIndex(0);
         cbProxyScheme.setEnabled(hasSavedProxySettings);
         cbProxyScheme.setSelectedItem(ApplicationConfig.getInstance().getProxyScheme());
+        addFocusTraversalKey(cbProxyScheme, KeyEvent.VK_ENTER);
         addComponent(cbProxyScheme, proxyPanel, 3, 1);
 
         proxyPanel.setBorder(BorderFactory.createTitledBorder("Proxy beállítások"));

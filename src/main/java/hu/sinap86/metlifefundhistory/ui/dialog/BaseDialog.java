@@ -7,7 +7,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.time.DayOfWeek;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.swing.*;
 
@@ -87,6 +89,13 @@ public class BaseDialog extends JDialog {
     protected <T extends Component> T addComponent(final T component, final JPanel panel, final int row, final int column, final Integer columnWidth) {
         panel.add(component, getConstraints(row, column, columnWidth));
         return component;
+    }
+
+    protected void addFocusTraversalKey(final Container container, final int key) {
+        final Set<AWTKeyStroke> keys = container.getFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS);
+        final Set<AWTKeyStroke> newKeys = new HashSet<>(keys);
+        newKeys.add(KeyStroke.getKeyStroke(key, 0));
+        container.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, newKeys);
     }
 
     protected GridBagConstraints getConstraints(final int row, final int column) {
