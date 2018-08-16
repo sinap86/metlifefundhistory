@@ -12,6 +12,7 @@ public class WebRequestManager {
     private boolean authenticationWithPasswordSucceeded;
     private boolean authenticationWithSmsOtpSucceeded;
 
+    // TODO valami figyelés kellene a háttérben, hogy lejárt-e a session
     public boolean isAuthenticated() {
         return authenticationWithPasswordSucceeded && authenticationWithSmsOtpSucceeded;
     }
@@ -38,5 +39,9 @@ public class WebRequestManager {
 
     public Collection<String> getUserContracts() {
         return Lists.newArrayList("00177736");
+    }
+
+    public void logout() {
+        log.debug("Logout called.");
     }
 }

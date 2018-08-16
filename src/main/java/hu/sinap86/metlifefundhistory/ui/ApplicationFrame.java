@@ -71,6 +71,9 @@ public class ApplicationFrame extends JFrame {
 
         JMenuItem exitMenuItem = addMenuItem(fileMenu, "Kilépés", KeyEvent.VK_K);
         exitMenuItem.addActionListener(event -> {
+            if (webRequestManager.isAuthenticated()) {
+                webRequestManager.logout();
+            }
             System.exit(0);
         });
 
