@@ -82,9 +82,11 @@ public class LoginDialog extends BaseDialog {
             final char[] password = pfPassword.getPassword();
             if (StringUtils.isEmpty(userName)) {
                 showErrorDialog("Nem adott meg felhasználó nevet!");
+                tfName.requestFocus();
                 return;
             }
             if (ArrayUtils.isEmpty(password)) {
+                pfPassword.requestFocus();
                 showErrorDialog("Nem adott meg jelszót!");
                 return;
             }
@@ -95,16 +97,18 @@ public class LoginDialog extends BaseDialog {
                 tfName.setEnabled(false);
                 pfPassword.setEnabled(false);
                 tfSmsOtp.setEnabled(true);
+                tfSmsOtp.requestFocus();
             } else {
                 showErrorDialog("Hibás felhasználónév vagy jelszó!");
+                pfPassword.requestFocus();
             }
         }
 
         private void authenticateWithSmsOtp() {
-            tfSmsOtp.requestFocus();
             final String smsOtp = tfSmsOtp.getText();
             if (StringUtils.isEmpty(smsOtp)) {
                 showErrorDialog("Nem adott meg SMS kódot!");
+                tfSmsOtp.requestFocus();
                 return;
             }
 
@@ -114,6 +118,7 @@ public class LoginDialog extends BaseDialog {
                 dispose();
             } else {
                 showErrorDialog("Hibás SMS kód!");
+                tfSmsOtp.requestFocus();
             }
         }
     }

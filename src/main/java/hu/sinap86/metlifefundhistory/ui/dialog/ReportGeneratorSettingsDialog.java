@@ -19,6 +19,8 @@ public class ReportGeneratorSettingsDialog extends BaseDialog {
     private File transactionHistoryDirectory;
 
     private JCheckBox chkUseOnlineRates;
+    private JButton btnChooseTransactionHistoryDirectory;
+    private JButton btnChooseRateFile;
 
     public ReportGeneratorSettingsDialog(final JFrame owner, final TransactionHistoryQuerySettings historyQuerySettings) {
         super(owner, "Riport beállítások", true);
@@ -47,7 +49,7 @@ public class ReportGeneratorSettingsDialog extends BaseDialog {
         final JTextField tfRateFile = addTextField(20, ratePanel, 1, 1);
         tfRateFile.setEnabled(false);
 
-        final JButton btnChooseRateFile = new JButton("...");
+        btnChooseRateFile = new JButton("...");
         btnChooseRateFile.addActionListener(event -> {
             rateFile = showFileChooser("Fájl megnyitása", JFileChooser.FILES_ONLY);
             if (rateFile != null) {
@@ -79,9 +81,9 @@ public class ReportGeneratorSettingsDialog extends BaseDialog {
             tfSelectedDirectory.setText(transactionHistoryDirectory.getAbsolutePath());
         }
 
-        final JButton btnChooseDirectory = new JButton("...");
-        btnChooseDirectory.setEnabled(transactionHistoryDirectory == null);
-        btnChooseDirectory.addActionListener(event -> {
+        btnChooseTransactionHistoryDirectory = new JButton("...");
+        btnChooseTransactionHistoryDirectory.setEnabled(transactionHistoryDirectory == null);
+        btnChooseTransactionHistoryDirectory.addActionListener(event -> {
             transactionHistoryDirectory = showFileChooser("Könyvtár megnyitása", JFileChooser.DIRECTORIES_ONLY);
             if (transactionHistoryDirectory != null) {
                 tfSelectedDirectory.setText(transactionHistoryDirectory.getAbsolutePath());
@@ -89,7 +91,7 @@ public class ReportGeneratorSettingsDialog extends BaseDialog {
                 tfSelectedDirectory.setText(StringUtils.EMPTY);
             }
         });
-        addComponent(btnChooseDirectory, historyDataPanel, 0, 2);
+        addComponent(btnChooseTransactionHistoryDirectory, historyDataPanel, 0, 2);
 
         historyDataPanel.setBorder(BorderFactory.createTitledBorder("Befektetési alap tranzakció történet beállítások"));
         return historyDataPanel;
@@ -125,18 +127,22 @@ public class ReportGeneratorSettingsDialog extends BaseDialog {
     private boolean validateUserInput() {
         if (!chkUseOnlineRates.isSelected() && rateFile == null) {
             showErrorDialog("Nincs árfolyam fájl kiválasztva!");
+            btnChooseRateFile.requestFocus();
             return false;
         }
         if (rateFile != null && !rateFile.canRead()) {
             showErrorDialog("A kiválasztott árfolyam fájl nem olvasható!");
+            btnChooseRateFile.requestFocus();
             return false;
         }
         if (transactionHistoryDirectory == null) {
             showErrorDialog("Nincs tranzakciós adatokat tartalmazó könyvtár kiválasztva!");
+            btnChooseTransactionHistoryDirectory.requestFocus();
             return false;
         }
         if (!transactionHistoryDirectory.canRead()) {
             showErrorDialog("A kiválasztott tranzakciós adatokat tartalmazó könyvtár nem olvasható!");
+            btnChooseTransactionHistoryDirectory.requestFocus();
             return false;
         }
         return true;
