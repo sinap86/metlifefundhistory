@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 
 import javax.swing.*;
@@ -35,7 +37,25 @@ public class ApplicationFrame extends JFrame {
         setTitle("MetLife tranzakció történet elemző");
         setSize(500, 400);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent windowEvent) {
+                logoutAndClose();
+            }
+        });
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+    }
+
+    private void logoutAndClose() {
+        if (JOptionPane.showConfirmDialog(this,
+                                          "Biztosan kilép?", "Kilépés",
+                                          JOptionPane.YES_NO_OPTION,
+                                          JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+            if (webRequestManager.isAuthenticated()) {
+                webRequestManager.logout();
+            }
+            System.exit(0);
+        }
     }
 
     private void createUsageDescription() {
@@ -71,10 +91,7 @@ public class ApplicationFrame extends JFrame {
 
         JMenuItem exitMenuItem = addMenuItem(fileMenu, "Kilépés", KeyEvent.VK_K);
         exitMenuItem.addActionListener(event -> {
-            if (webRequestManager.isAuthenticated()) {
-                webRequestManager.logout();
-            }
-            System.exit(0);
+            logoutAndClose();
         });
 
         JMenu reportMenu = new JMenu("Riport");
