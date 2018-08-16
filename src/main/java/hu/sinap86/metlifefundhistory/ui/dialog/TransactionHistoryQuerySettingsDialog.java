@@ -1,9 +1,11 @@
 package hu.sinap86.metlifefundhistory.ui.dialog;
 
+import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.web.WebRequestManager;
 
 import com.github.lgooddatepicker.components.DatePicker;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
 import java.io.File;
@@ -14,16 +16,16 @@ import javax.swing.*;
 
 public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
 
-    private final WebRequestManager webRequestManager;
+    private TransactionHistoryQuerySettings querySettings;
+
     final JComboBox<String> cbContracts;
     final DatePicker dpFromDate;
     final DatePicker dpToDate;
-    private final JTextField tfDirectory;
-    private File selectedDirectory;
+    private final JTextField tfSelectedDirectory;
+    private File transactionHistoryDirectory;
 
     public TransactionHistoryQuerySettingsDialog(final Frame owner, final WebRequestManager webRequestManager) {
         super(owner, "Lekérdezés beállítások", true);
-        this.webRequestManager = webRequestManager;
         final Collection<String> contracts = webRequestManager.getUserContracts();
 
         final JPanel topPanel = new JPanel(new GridBagLayout());
@@ -49,21 +51,32 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
 
         addLabel("Adatok mentése ide:", topPanel, 3, 0);
 
-        tfDirectory = addTextField(20, topPanel, 3, 1);
-        tfDirectory.setEnabled(false);
-        tfDirectory.setPreferredSize(new Dimension(100, 26));
+        tfSelectedDirectory = addTextField(20, topPanel, 3, 1);
+        tfSelectedDirectory.setEnabled(false);
+        tfSelectedDirectory.setPreferredSize(new Dimension(100, 26));
 
         final JButton btnChooseDirectory = new JButton("...");
         btnChooseDirectory.setPreferredSize(new Dimension(26, 26));
         btnChooseDirectory.addActionListener(event -> {
-            showDirectoryChooser();
+            transactionHistoryDirectory = showFileChooser("Könyvtár megnyitása", JFileChooser.DIRECTORIES_ONLY);
+            if (transactionHistoryDirectory != null) {
+                tfSelectedDirectory.setText(transactionHistoryDirectory.getAbsolutePath());
+            } else {
+                tfSelectedDirectory.setText(StringUtils.EMPTY);
+            }
         });
         addComponent(btnChooseDirectory, topPanel, 3, 2);
 
         final JButton btnQuery = new JButton("Lekérdez");
         btnQuery.addActionListener(event -> {
             if (validateUserInput()) {
-                // TODO create query settings object
+                querySettings = TransactionHistoryQuerySettings.builder()
+                        .contract((String) cbContracts.getSelectedItem())
+                        .fromDate(dpFromDate.getDate())
+                        .toDate(dpToDate.getDate())
+                        .transactionHistoryDirectory(transactionHistoryDirectory)
+                        .build();
+
                 setVisible(false);
                 dispose();
             }
@@ -79,25 +92,10 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
         buttonPanel.add(btnQuery);
         buttonPanel.add(btnCancel);
 
-        getContentPane().add(topPanel, BorderLayout.CENTER);
-        getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+        getContentPane().add(topPanel, BorderLayout.NORTH);
+        getContentPane().add(buttonPanel, BorderLayout.CENTER);
 
         postConstruct(owner);
-    }
-
-    private void showDirectoryChooser() {
-        final JFileChooser chooser = new JFileChooser();
-        chooser.setCurrentDirectory(new java.io.File("."));
-        chooser.setDialogTitle("Könyvtár megnyitása");
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setAcceptAllFileFilterUsed(false);
-
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            selectedDirectory = chooser.getSelectedFile();
-            tfDirectory.setText(selectedDirectory.getAbsolutePath());
-        } else {
-            tfDirectory.setText("");
-        }
     }
 
     private boolean validateUserInput() {
@@ -119,15 +117,18 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
             showErrorDialog("Vég dátum nem lehet a kezdő dátum előtti!");
             return false;
         }
-        if (selectedDirectory == null) {
+        if (transactionHistoryDirectory == null) {
             showErrorDialog("Nincs adat mentési könyvtár kiválasztva!");
             return false;
         }
-        if (!selectedDirectory.canWrite()) {
+        if (!transactionHistoryDirectory.canWrite()) {
             showErrorDialog("A kiválasztott adat mentési könyvtár nem írható!");
             return false;
         }
         return true;
     }
 
+    public TransactionHistoryQuerySettings getSettings() {
+        return querySettings;
+    }
 }

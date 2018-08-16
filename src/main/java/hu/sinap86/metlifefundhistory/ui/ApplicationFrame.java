@@ -1,6 +1,9 @@
 package hu.sinap86.metlifefundhistory.ui;
 
+import hu.sinap86.metlifefundhistory.config.ReportGeneratorSettings;
+import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.ui.dialog.LoginDialog;
+import hu.sinap86.metlifefundhistory.ui.dialog.ReportGeneratorSettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.SettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.TransactionHistoryQuerySettingsDialog;
 import hu.sinap86.metlifefundhistory.util.Constants;
@@ -76,12 +79,15 @@ public class ApplicationFrame extends JFrame {
 
         JMenuItem createReportMenuItem = addMenuItem(reportMenu, "Riport generálás korábbi adatokból", KeyEvent.VK_G);
         createReportMenuItem.setToolTipText("Korábban letöltött befektetési alap tranzakciós adatok feldolgozása és Excel riport készítése");
+        createReportMenuItem.addActionListener(event -> {
+            showReportGeneratorSettingsDialog(null);
+        });
 
         JMenuItem queryAndCreateReportMenuItem = addMenuItem(reportMenu, "Online adatlekérdezés és riport generálás", KeyEvent.VK_O);
         queryAndCreateReportMenuItem.setToolTipText("Befektetési alap tranzakciós adatok lekérdezése, majd mentése a MetLife renszeréből valamint Excel riport készítése");
         queryAndCreateReportMenuItem.addActionListener(event -> {
             if (webRequestManager.isAuthenticated()) {
-                showTransactionHistoryQuerySettingsDialog();
+                showTransactionHistoryQueryAndReportGeneratorSettingsDialog();
             } else {
                 final LoginDialog loginDialog = new LoginDialog(this, webRequestManager);
                 loginDialog.setVisible(true);
@@ -89,7 +95,7 @@ public class ApplicationFrame extends JFrame {
                 if (webRequestManager.isAuthenticated()) {
                     // TODO show user and contract information instead of UsageDescription
 
-                    showTransactionHistoryQuerySettingsDialog();
+                    showTransactionHistoryQueryAndReportGeneratorSettingsDialog();
                 }
             }
         });
@@ -113,9 +119,27 @@ public class ApplicationFrame extends JFrame {
         setJMenuBar(menuBar);
     }
 
-    private void showTransactionHistoryQuerySettingsDialog() {
+    private void showTransactionHistoryQueryAndReportGeneratorSettingsDialog() {
         final TransactionHistoryQuerySettingsDialog transactionHistoryQuerySettingsDialog = new TransactionHistoryQuerySettingsDialog(this, webRequestManager);
         transactionHistoryQuerySettingsDialog.setVisible(true);
+
+        final TransactionHistoryQuerySettings querySettings = transactionHistoryQuerySettingsDialog.getSettings();
+        if (querySettings != null) {
+            // TODO download transaction history
+
+            showReportGeneratorSettingsDialog(querySettings);
+        }
+    }
+
+    private void showReportGeneratorSettingsDialog(final TransactionHistoryQuerySettings historyQuerySettings) {
+        log.debug("historyQuerySettings: {}", historyQuerySettings);
+
+        final ReportGeneratorSettingsDialog reportGeneratorSettingsDialog = new ReportGeneratorSettingsDialog(this, historyQuerySettings);
+        reportGeneratorSettingsDialog.setVisible(true);
+        final ReportGeneratorSettings reportGeneratorSettings = reportGeneratorSettingsDialog.getSettings();
+        log.debug("reportGeneratorSettings: {}", reportGeneratorSettings);
+
+        // TODO generate report
     }
 
     private JMenuItem addMenuItem(final JMenu menu, final String text, final int mnemonic) {

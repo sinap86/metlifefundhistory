@@ -72,8 +72,8 @@ public class SettingsDialog extends BaseDialog {
         final JPanel buttonPanel = new JPanel();
         buttonPanel.add(btnSave);
 
-        getContentPane().add(proxyPanel, BorderLayout.CENTER);
-        getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+        getContentPane().add(proxyPanel, BorderLayout.NORTH);
+        getContentPane().add(buttonPanel, BorderLayout.CENTER);
 
         postConstruct(owner);
     }

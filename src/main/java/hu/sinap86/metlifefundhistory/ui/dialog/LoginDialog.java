@@ -58,8 +58,8 @@ public class LoginDialog extends BaseDialog {
         buttonPanel.add(btnLogin);
         buttonPanel.add(btnCancel);
 
-        getContentPane().add(topPanel, BorderLayout.CENTER);
-        getContentPane().add(buttonPanel, BorderLayout.SOUTH);
+        getContentPane().add(topPanel, BorderLayout.NORTH);
+        getContentPane().add(buttonPanel, BorderLayout.CENTER);
 
         postConstruct(owner);
     }
@@ -101,6 +101,7 @@ public class LoginDialog extends BaseDialog {
         }
 
         private void authenticateWithSmsOtp() {
+            tfSmsOtp.requestFocus();
             final String smsOtp = tfSmsOtp.getText();
             if (StringUtils.isEmpty(smsOtp)) {
                 showErrorDialog("Nem adott meg SMS kódot!");

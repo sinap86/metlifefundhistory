@@ -5,6 +5,7 @@ import com.github.lgooddatepicker.components.DatePickerSettings;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.time.DayOfWeek;
 import java.util.Locale;
 
@@ -45,6 +46,20 @@ public class BaseDialog extends JDialog {
 
     protected void showErrorDialog(final String text) {
         JOptionPane.showMessageDialog(this, text, "Hiba", JOptionPane.ERROR_MESSAGE);
+    }
+
+    protected File showFileChooser(final String title, final int selectionMode) {
+        final JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new java.io.File("."));
+        chooser.setDialogTitle(title);
+        chooser.setFileSelectionMode(selectionMode);
+        if (selectionMode == JFileChooser.DIRECTORIES_ONLY) {
+            chooser.setAcceptAllFileFilterUsed(false);
+        }
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            return chooser.getSelectedFile();
+        }
+        return null;
     }
 
     protected DatePicker createDatePicker() {
