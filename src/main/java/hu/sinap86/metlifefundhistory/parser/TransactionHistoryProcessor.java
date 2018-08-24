@@ -1,6 +1,7 @@
 package hu.sinap86.metlifefundhistory.parser;
 
 import hu.sinap86.metlifefundhistory.model.FundHistory;
+import hu.sinap86.metlifefundhistory.util.Constants;
 import hu.sinap86.metlifefundhistory.util.Utils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +23,7 @@ public class TransactionHistoryProcessor {
         fundHistoryByName.clear();
 
         Files.walk(Paths.get(dataDirectory.toURI()))
-                .filter(p -> Files.isRegularFile(p) && p.getFileName().toString().toLowerCase().endsWith(".json"))
+                .filter(p -> Files.isRegularFile(p) && p.getFileName().toString().toLowerCase().endsWith(Constants.JSON_FILE_EXTENSION))
                 .forEach(file -> processFile(file.toFile()));
 
         return fundHistoryByName;

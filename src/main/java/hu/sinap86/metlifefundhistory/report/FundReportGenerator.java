@@ -24,7 +24,6 @@ public class FundReportGenerator {
         if (settings == null) {
             throw new IllegalStateException("No settings given!");
         }
-        // TODO validate settings
         this.settings = settings;
     }
 

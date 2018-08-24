@@ -1,7 +1,7 @@
 package hu.sinap86.metlifefundhistory.ui.dialog;
 
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
-import hu.sinap86.metlifefundhistory.web.WebRequestManager;
+import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
 
 import com.github.lgooddatepicker.components.DatePicker;
 import org.apache.commons.collections4.CollectionUtils;
@@ -24,10 +24,10 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
     private DatePicker dpToDate;
     private JTextField tfSelectedDirectory;
 
-    public TransactionHistoryQuerySettingsDialog(final Frame owner, final WebRequestManager webRequestManager) {
+    public TransactionHistoryQuerySettingsDialog(final Frame owner, final MetLifeWebSessionManager webSessionManager) {
         super(owner, "Lekérdezés beállítások", true);
 
-        final Collection<String> contracts = webRequestManager.getUserContracts();
+        final Collection<String> contracts = webSessionManager.getUserContracts();
 
         getContentPane().add(createQuerySettingsPanel(contracts), BorderLayout.NORTH);
         getContentPane().add(createButtonPanel(), BorderLayout.CENTER);

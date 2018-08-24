@@ -2,16 +2,20 @@ package hu.sinap86.metlifefundhistory.ui;
 
 import hu.sinap86.metlifefundhistory.config.ReportGeneratorSettings;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
+import hu.sinap86.metlifefundhistory.exception.TransactionDataDownloadException;
 import hu.sinap86.metlifefundhistory.report.FundReportGenerator;
 import hu.sinap86.metlifefundhistory.ui.dialog.LoginDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.ReportGeneratorSettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.SettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.TransactionHistoryQuerySettingsDialog;
 import hu.sinap86.metlifefundhistory.util.Constants;
-import hu.sinap86.metlifefundhistory.web.WebRequestManager;
-
+import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
+import hu.sinap86.metlifefundhistory.web.TransactionDataDownloader;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.swing.*;
+import javax.swing.text.Document;
+import javax.swing.text.html.HTMLEditorKit;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -19,14 +23,10 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 
-import javax.swing.*;
-import javax.swing.text.Document;
-import javax.swing.text.html.HTMLEditorKit;
-
 @Slf4j
 public class ApplicationFrame extends JFrame {
 
-    private final WebRequestManager webRequestManager = new WebRequestManager();
+    private final MetLifeWebSessionManager webSessionManager = new MetLifeWebSessionManager();
 
     public ApplicationFrame() {
         initUI();
@@ -50,11 +50,11 @@ public class ApplicationFrame extends JFrame {
 
     private void logoutAndClose() {
         if (JOptionPane.showConfirmDialog(this,
-                                          "Biztosan kilép?", "Kilépés",
-                                          JOptionPane.YES_NO_OPTION,
-                                          JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
-            if (webRequestManager.isAuthenticated()) {
-                webRequestManager.logout();
+                "Biztosan kilép?", "Kilépés",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+            if (webSessionManager.isAuthenticated()) {
+                webSessionManager.logout();
             }
             System.exit(0);
         }
@@ -104,7 +104,8 @@ public class ApplicationFrame extends JFrame {
         createReportMenuItem.addActionListener(event -> {
             try {
                 showReportGeneratorSettingsDialog(null);
-            } catch (final Exception e) {
+            } catch (Exception e) {
+                log.error("Fatal error during report generation:", e);
                 showErrorDialog("Végzetes hiba történt!");
             }
         });
@@ -113,19 +114,20 @@ public class ApplicationFrame extends JFrame {
         queryAndCreateReportMenuItem.setToolTipText("Befektetési alap tranzakciós adatok lekérdezése, majd mentése a MetLife renszeréből valamint Excel riport készítése");
         queryAndCreateReportMenuItem.addActionListener(event -> {
             try {
-                if (webRequestManager.isAuthenticated()) {
+                if (webSessionManager.isAuthenticated()) {
                     showTransactionHistoryQueryAndReportGeneratorSettingsDialog();
                 } else {
-                    final LoginDialog loginDialog = new LoginDialog(this, webRequestManager);
+                    final LoginDialog loginDialog = new LoginDialog(this, webSessionManager);
                     loginDialog.setVisible(true);
 
-                    if (webRequestManager.isAuthenticated()) {
+                    if (webSessionManager.isAuthenticated()) {
                         // TODO show user and contract information instead of UsageDescription
 
                         showTransactionHistoryQueryAndReportGeneratorSettingsDialog();
                     }
                 }
-            } catch (final Exception e) {
+            } catch (Exception e) {
+                log.error("Fatal error during query report data and report generation:", e);
                 showErrorDialog("Végzetes hiba történt!");
             }
         });
@@ -150,14 +152,20 @@ public class ApplicationFrame extends JFrame {
     }
 
     private void showTransactionHistoryQueryAndReportGeneratorSettingsDialog() {
-        final TransactionHistoryQuerySettingsDialog transactionHistoryQuerySettingsDialog = new TransactionHistoryQuerySettingsDialog(this, webRequestManager);
+        final TransactionHistoryQuerySettingsDialog transactionHistoryQuerySettingsDialog = new TransactionHistoryQuerySettingsDialog(this, webSessionManager);
         transactionHistoryQuerySettingsDialog.setVisible(true);
 
         final TransactionHistoryQuerySettings querySettings = transactionHistoryQuerySettingsDialog.getSettings();
         if (querySettings != null) {
-            // TODO download transaction history
+            // TODO validate settings
+            try {
+                new TransactionDataDownloader(webSessionManager).download(querySettings);
 
-            showReportGeneratorSettingsDialog(querySettings);
+                showReportGeneratorSettingsDialog(querySettings);
+            } catch (TransactionDataDownloadException e) {
+                log.error("Cannot download transaction data:", e);
+                showErrorDialog("Sikertelen Online adatlekérdezés!");
+            }
         }
     }
 
@@ -170,6 +178,7 @@ public class ApplicationFrame extends JFrame {
         log.debug("reportGeneratorSettings: {}", reportGeneratorSettings);
 
         if (reportGeneratorSettings != null) {
+            // TODO validate settings
             try {
                 // TODO show process dialog
                 final FundReportGenerator reportGenerator = new FundReportGenerator(reportGeneratorSettings);
@@ -186,30 +195,31 @@ public class ApplicationFrame extends JFrame {
     private void showReportGeneratorResult(final File reportFile) throws IOException {
         if (reportFile == null) {
             showErrorDialog("Hiba történt riport generálás során!");
+            return;
         }
 
         final String title = "Siker";
         final String message = String.format("Sikeres riport generálás: %s", reportFile.getAbsolutePath());
 
         if (Desktop.isDesktopSupported()) {
-            final Object[] options = { "Megnyitás", "Ok" };
+            final Object[] options = {"Megnyitás", "Ok"};
             final int result = JOptionPane.showOptionDialog(this,
-                                                            message,
-                                                            title,
-                                                            JOptionPane.YES_NO_OPTION,
-                                                            JOptionPane.INFORMATION_MESSAGE,
-                                                            null,
-                                                            options,
-                                                            null);
+                    message,
+                    title,
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    options,
+                    null);
             if (result == JOptionPane.YES_OPTION) {
                 Desktop.getDesktop().open(reportFile);
             }
         } else {
             log.warn("Desktop not supported!");
             JOptionPane.showMessageDialog(this,
-                                          message,
-                                          title,
-                                          JOptionPane.INFORMATION_MESSAGE);
+                    message,
+                    title,
+                    JOptionPane.INFORMATION_MESSAGE);
         }
     }
 

@@ -1,6 +1,6 @@
 package hu.sinap86.metlifefundhistory.ui.dialog;
 
-import hu.sinap86.metlifefundhistory.web.WebRequestManager;
+import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -15,17 +15,17 @@ import javax.swing.border.EtchedBorder;
 
 public class LoginDialog extends BaseDialog {
 
-    private final WebRequestManager webRequestManager;
+    private final MetLifeWebSessionManager webSessionManager;
     private JTextField tfName;
     private JPasswordField pfPassword;
     private JTextField tfSmsOtp;
     private JButton btnLogin;
 
-    public LoginDialog(final JFrame owner, final WebRequestManager webRequestManager) {
+    public LoginDialog(final JFrame owner, final MetLifeWebSessionManager webSessionManager) {
         super(owner, "Bejelentkezés", true);
-        this.webRequestManager = webRequestManager;
+        this.webSessionManager = webSessionManager;
 
-        final boolean authenticationWithPasswordSucceeded = webRequestManager.isAuthenticationWithPasswordSucceeded();
+        final boolean authenticationWithPasswordSucceeded = webSessionManager.isAuthenticationWithPasswordSucceeded();
 
         getContentPane().add(createPasswordPanel(authenticationWithPasswordSucceeded), BorderLayout.NORTH);
         getContentPane().add(createButtonPanel(authenticationWithPasswordSucceeded), BorderLayout.CENTER);
@@ -79,7 +79,7 @@ public class LoginDialog extends BaseDialog {
 
         @Override
         public void actionPerformed(final ActionEvent e) {
-            if (webRequestManager.isAuthenticationWithPasswordSucceeded()) {
+            if (webSessionManager.isAuthenticationWithPasswordSucceeded()) {
                 // authentication step 1 (user name + password) succeeded
                 authenticateWithSmsOtp();
             } else {
@@ -102,7 +102,7 @@ public class LoginDialog extends BaseDialog {
                 return;
             }
 
-            final boolean success = webRequestManager.authenticate(userName, password);
+            final boolean success = webSessionManager.authenticate(userName, password);
             if (success) {
                 btnLogin.setText("Bejelentkezés");
                 tfName.setEnabled(false);
@@ -123,7 +123,7 @@ public class LoginDialog extends BaseDialog {
                 return;
             }
 
-            final boolean success = webRequestManager.authenticate(smsOtp);
+            final boolean success = webSessionManager.authenticate(smsOtp);
             if (success) {
                 setVisible(false);
                 dispose();
