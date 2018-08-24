@@ -51,8 +51,9 @@ public class ReportGeneratorSettingsDialog extends BaseDialog {
 
         btnChooseRateFile = new JButton("...");
         btnChooseRateFile.addActionListener(event -> {
-            rateFile = showFileChooser("Fájl megnyitása", JFileChooser.FILES_ONLY);
+            rateFile = showFileChooser("Fájl megnyitása", JFileChooser.FILES_ONLY, XML_FILE_NAME_FILTER);
             if (rateFile != null) {
+                // TODO validate if file is a valid XML file
                 tfRateFile.setText(rateFile.getAbsolutePath());
             } else {
                 tfRateFile.setText(StringUtils.EMPTY);

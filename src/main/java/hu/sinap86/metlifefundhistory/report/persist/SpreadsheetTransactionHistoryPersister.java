@@ -1,12 +1,13 @@
-package hu.sinap86.metlifefundhistory.xls;
+package hu.sinap86.metlifefundhistory.report.persist;
 
 import static hu.sinap86.metlifefundhistory.util.XLSUtils.createCell;
-import static hu.sinap86.metlifefundhistory.util.XLSUtils.writeCells;
-import static hu.sinap86.metlifefundhistory.util.XLSUtils.setColumnWidths;
 import static hu.sinap86.metlifefundhistory.util.XLSUtils.nextRow;
+import static hu.sinap86.metlifefundhistory.util.XLSUtils.setColumnWidths;
+import static hu.sinap86.metlifefundhistory.util.XLSUtils.writeCells;
 
 import hu.sinap86.metlifefundhistory.model.FundHistory;
 import hu.sinap86.metlifefundhistory.model.HistoryElement;
+import hu.sinap86.metlifefundhistory.report.rate.RateProvider;
 import hu.sinap86.metlifefundhistory.util.Utils;
 
 import com.google.common.collect.Lists;
@@ -27,19 +28,18 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.awt.*;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.function.Function;
 
 @Slf4j
-public class TransactionHistoryPersister {
-
+// TODO rename
+// TODO super interface
+public class SpreadsheetTransactionHistoryPersister {
 
     @Data
     @Builder
@@ -61,21 +61,14 @@ public class TransactionHistoryPersister {
     private static final String CELL_STYLE_PERCENT = "0.##%";
 
     private final File resultFile;
-    private final Properties rateProperties = new Properties();
+    private final RateProvider rateProvider;
     private final XSSFWorkbook workbook;
     private CellStyle sheetHeaderCellStyle;
     private XSSFSheet summarySheet;
 
-    public TransactionHistoryPersister(final File resultFile, final File ratesFile) {
+    public SpreadsheetTransactionHistoryPersister(final File resultFile, final RateProvider rateProvider) {
         this.resultFile = resultFile;
-        if (ratesFile != null) {
-            try {
-                rateProperties.loadFromXML(new FileInputStream(ratesFile));
-                log.debug("Using exchange rates for active funds from file: {}", ratesFile.getAbsolutePath());
-            } catch (IOException e) {
-                log.error("Cannot load exchange rates from file: " + ratesFile.getAbsolutePath(), e);
-            }
-        }
+        this.rateProvider = rateProvider;
         this.workbook = new XSSFWorkbook();
         initStyles();
         initSummarySheet();
@@ -156,7 +149,7 @@ public class TransactionHistoryPersister {
             totalBalance = history.getTotalBalance();
             currentValue = null;
         } else {
-            rate = getExchangeRateOrZero(fundName);
+            rate = rateProvider.getExchangeRateOrZero(fundName);
             totalBalance = history.getTotalBalance(rate);
             currentValue = totalUnits.multiply(rate);
         }
@@ -184,7 +177,7 @@ public class TransactionHistoryPersister {
         final CellStyle boldBordered = createBoldBorderedCellStyle();
 
         XSSFRow row = nextRow(sheet);
-        createCell(row, fundHistorySummary.rate == null ? "Záró mérleg" : String.format("Mérleg %s-n", rateProperties.getProperty("RATES_DATE")), boldBordered);
+        createCell(row, fundHistorySummary.rate == null ? "Záró mérleg" : String.format("Mérleg %s-n", rateProvider.getRateDate()), boldBordered);
         createCell(row, StringUtils.EMPTY, boldBordered);
         createCell(row, fundHistorySummary.rate, boldBordered);
         createCell(row, fundHistorySummary.totalBalance, createBoldBorderedCellStyle(CELL_STYLE_AMOUNT, color));
@@ -212,7 +205,7 @@ public class TransactionHistoryPersister {
         createCell(row, fundHistorySummary.totalBalance, createCellStyle(CELL_STYLE_AMOUNT, color, notSold));
         createCell(row, fundHistorySummary.averageInterestRate, createCellStyle(CELL_STYLE_PERCENT, color, notSold));
         if (notSold) {
-            createCell(row, String.format("%s-i állapot szerint", rateProperties.getProperty("RATES_DATE")), cellStyleText);
+            createCell(row, String.format("%s-i állapot szerint", rateProvider.getRateDate()), cellStyleText);
         }
     }
 
@@ -246,15 +239,6 @@ public class TransactionHistoryPersister {
                 .filter(historyElement -> Lists.newArrayList(transactionCodes).contains(historyElement.getTransactionCode()))
                 .map(HistoryElement::getSumAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    private BigDecimal getExchangeRateOrZero(final String fundName) {
-        final String fundRate = rateProperties.getProperty(fundName);
-        if (StringUtils.isNotEmpty(fundRate)) {
-            return new BigDecimal(fundRate);
-        }
-        log.warn("No exchange rate for '{}' fund!", fundName);
-        return BigDecimal.ZERO;
     }
 
     private Color getColor(final BigDecimal amountSum) {

@@ -12,8 +12,12 @@ import java.util.Locale;
 import java.util.Set;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class BaseDialog extends JDialog {
+
+    protected final FileNameExtensionFilter XML_FILE_NAME_FILTER = new FileNameExtensionFilter("XML fájlok", "xml", "XML");
 
     public BaseDialog(final Frame owner, final String title, final boolean modal) {
         super(owner, title, modal);
@@ -51,11 +55,16 @@ public class BaseDialog extends JDialog {
     }
 
     protected File showFileChooser(final String title, final int selectionMode) {
+        return showFileChooser(title, selectionMode, null);
+    }
+
+    protected File showFileChooser(final String title, final int selectionMode, final FileFilter filter) {
         final JFileChooser chooser = new JFileChooser();
         chooser.setCurrentDirectory(new java.io.File("."));
         chooser.setDialogTitle(title);
         chooser.setFileSelectionMode(selectionMode);
-        if (selectionMode == JFileChooser.DIRECTORIES_ONLY) {
+        chooser.setFileFilter(filter);
+        if (selectionMode == JFileChooser.DIRECTORIES_ONLY || filter != null) {
             chooser.setAcceptAllFileFilterUsed(false);
         }
         if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {

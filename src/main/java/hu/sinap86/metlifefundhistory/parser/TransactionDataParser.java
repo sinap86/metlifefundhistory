@@ -86,6 +86,10 @@ public class TransactionDataParser {
         public static TransactionDataParser getInstance(final File transactionDataFile) throws IOException {
             final JsonObject rootObject = Utils.getAsJsonObject(transactionDataFile);
             final String transactionCode = getString(rootObject, "transactionCode");
+            if (transactionCode == null) {
+                return null;
+            }
+
             switch (transactionCode) {
                 // Rendszeres díj kiegyenlítés (B522), Előrefizetés (T536) - Premium
                 case "B522":

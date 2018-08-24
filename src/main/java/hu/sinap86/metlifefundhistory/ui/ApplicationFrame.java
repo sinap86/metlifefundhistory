@@ -2,6 +2,7 @@ package hu.sinap86.metlifefundhistory.ui;
 
 import hu.sinap86.metlifefundhistory.config.ReportGeneratorSettings;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
+import hu.sinap86.metlifefundhistory.report.FundReportGenerator;
 import hu.sinap86.metlifefundhistory.ui.dialog.LoginDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.ReportGeneratorSettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.SettingsDialog;
@@ -15,6 +16,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
 
 import javax.swing.*;
@@ -100,23 +102,31 @@ public class ApplicationFrame extends JFrame {
         JMenuItem createReportMenuItem = addMenuItem(reportMenu, "Riport generálás korábbi adatokból", KeyEvent.VK_G);
         createReportMenuItem.setToolTipText("Korábban letöltött befektetési alap tranzakciós adatok feldolgozása és Excel riport készítése");
         createReportMenuItem.addActionListener(event -> {
-            showReportGeneratorSettingsDialog(null);
+            try {
+                showReportGeneratorSettingsDialog(null);
+            } catch (final Exception e) {
+                showErrorDialog("Végzetes hiba történt!");
+            }
         });
 
         JMenuItem queryAndCreateReportMenuItem = addMenuItem(reportMenu, "Online adatlekérdezés és riport generálás", KeyEvent.VK_O);
         queryAndCreateReportMenuItem.setToolTipText("Befektetési alap tranzakciós adatok lekérdezése, majd mentése a MetLife renszeréből valamint Excel riport készítése");
         queryAndCreateReportMenuItem.addActionListener(event -> {
-            if (webRequestManager.isAuthenticated()) {
-                showTransactionHistoryQueryAndReportGeneratorSettingsDialog();
-            } else {
-                final LoginDialog loginDialog = new LoginDialog(this, webRequestManager);
-                loginDialog.setVisible(true);
-
+            try {
                 if (webRequestManager.isAuthenticated()) {
-                    // TODO show user and contract information instead of UsageDescription
-
                     showTransactionHistoryQueryAndReportGeneratorSettingsDialog();
+                } else {
+                    final LoginDialog loginDialog = new LoginDialog(this, webRequestManager);
+                    loginDialog.setVisible(true);
+
+                    if (webRequestManager.isAuthenticated()) {
+                        // TODO show user and contract information instead of UsageDescription
+
+                        showTransactionHistoryQueryAndReportGeneratorSettingsDialog();
+                    }
                 }
+            } catch (final Exception e) {
+                showErrorDialog("Végzetes hiba történt!");
             }
         });
 
@@ -159,7 +169,52 @@ public class ApplicationFrame extends JFrame {
         final ReportGeneratorSettings reportGeneratorSettings = reportGeneratorSettingsDialog.getSettings();
         log.debug("reportGeneratorSettings: {}", reportGeneratorSettings);
 
-        // TODO generate report
+        if (reportGeneratorSettings != null) {
+            try {
+                // TODO show process dialog
+                final FundReportGenerator reportGenerator = new FundReportGenerator(reportGeneratorSettings);
+                final File reportFile = reportGenerator.generate();
+
+                showReportGeneratorResult(reportFile);
+            } catch (IOException e) {
+                log.error("Cannot generate fund report:", e);
+                showErrorDialog("Hiba történt riport generálás során!");
+            }
+        }
+    }
+
+    private void showReportGeneratorResult(final File reportFile) throws IOException {
+        if (reportFile == null) {
+            showErrorDialog("Hiba történt riport generálás során!");
+        }
+
+        final String title = "Siker";
+        final String message = String.format("Sikeres riport generálás: %s", reportFile.getAbsolutePath());
+
+        if (Desktop.isDesktopSupported()) {
+            final Object[] options = { "Megnyitás", "Ok" };
+            final int result = JOptionPane.showOptionDialog(this,
+                                                            message,
+                                                            title,
+                                                            JOptionPane.YES_NO_OPTION,
+                                                            JOptionPane.INFORMATION_MESSAGE,
+                                                            null,
+                                                            options,
+                                                            null);
+            if (result == JOptionPane.YES_OPTION) {
+                Desktop.getDesktop().open(reportFile);
+            }
+        } else {
+            log.warn("Desktop not supported!");
+            JOptionPane.showMessageDialog(this,
+                                          message,
+                                          title,
+                                          JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    protected void showErrorDialog(final String text) {
+        JOptionPane.showMessageDialog(this, text, "Hiba", JOptionPane.ERROR_MESSAGE);
     }
 
     private JMenuItem addMenuItem(final JMenu menu, final String text, final int mnemonic) {

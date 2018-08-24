@@ -8,4 +8,7 @@ public class Constants {
     public static final String[] SUPPORTED_PROXY_SCHEMES = new String[]{ "http", "https" };
 
     public static final String USAGE_DESCRIPTION_FILE = "usage_description.html";
+
+    // TODO settings?
+    public static final String REPORT_FILE_NAME = "results.xlsx";
 }

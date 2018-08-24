@@ -74,17 +74,21 @@ public class SettingsDialog extends BaseDialog {
     private JPanel createButtonPanel() {
         final JButton btnSave = new JButton("Mentés");
         btnSave.addActionListener(event -> {
-            final boolean useProxy = chkUseProxy.isSelected();
-            ApplicationConfig.getInstance().setUseProxy(useProxy);
-            if (useProxy) {
-                ApplicationConfig.getInstance().setProxyHost(tfProxyHost.getText());
-                ApplicationConfig.getInstance().setProxyPort(ntfProxyPort.getNumber());
-                ApplicationConfig.getInstance().setProxyScheme((String) cbProxyScheme.getSelectedItem());
+            try {
+                final boolean useProxy = chkUseProxy.isSelected();
+                ApplicationConfig.getInstance().setUseProxy(useProxy);
+                if (useProxy) {
+                    ApplicationConfig.getInstance().setProxyHost(tfProxyHost.getText());
+                    ApplicationConfig.getInstance().setProxyPort(ntfProxyPort.getNumber());
+                    ApplicationConfig.getInstance().setProxyScheme((String) cbProxyScheme.getSelectedItem());
+                }
+                JOptionPane.showMessageDialog(SettingsDialog.this,
+                                              "Sikeres mentés!",
+                                              "Beállítások",
+                                              JOptionPane.INFORMATION_MESSAGE);
+            } catch (final Exception e) {
+                showErrorDialog("Hiba történt a beállítások mentése során!");
             }
-            JOptionPane.showMessageDialog(SettingsDialog.this,
-                                          "Sikeres mentés!",
-                                          "Beállítások",
-                                          JOptionPane.INFORMATION_MESSAGE);
             setVisible(false);
             dispose();
         });
