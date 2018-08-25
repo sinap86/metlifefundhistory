@@ -6,7 +6,7 @@ import hu.sinap86.metlifefundhistory.model.FundHistory;
 import hu.sinap86.metlifefundhistory.report.rate.FileRateProvider;
 import hu.sinap86.metlifefundhistory.report.rate.OnlineRateProvider;
 import hu.sinap86.metlifefundhistory.report.rate.RateProvider;
-import hu.sinap86.metlifefundhistory.util.Constants;
+import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.report.persist.SpreadsheetTransactionHistoryPersister;
 
 import lombok.extern.slf4j.Slf4j;

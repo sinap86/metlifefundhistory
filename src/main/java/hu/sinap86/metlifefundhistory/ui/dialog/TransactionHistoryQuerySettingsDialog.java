@@ -1,24 +1,26 @@
 package hu.sinap86.metlifefundhistory.ui.dialog;
 
-import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
-import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
-
 import com.github.lgooddatepicker.components.DatePicker;
+import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
+import hu.sinap86.metlifefundhistory.ui.component.RateSettingsPanel;
+import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.Collection;
 
-import javax.swing.*;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.*;
 
 public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
 
     private TransactionHistoryQuerySettings querySettings;
     private File transactionHistoryDirectory;
 
+    private final RateSettingsPanel rateSettingsPanel;
     private JComboBox<String> cbContracts;
     private DatePicker dpFromDate;
     private DatePicker dpToDate;
@@ -29,8 +31,11 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
 
         final Collection<String> contracts = webSessionManager.getUserContracts();
 
+        rateSettingsPanel = new RateSettingsPanel();
+
         getContentPane().add(createQuerySettingsPanel(contracts), BorderLayout.NORTH);
-        getContentPane().add(createButtonPanel(), BorderLayout.CENTER);
+        getContentPane().add(rateSettingsPanel, BorderLayout.CENTER);
+        getContentPane().add(createButtonPanel(), BorderLayout.SOUTH);
 
         postConstruct(owner);
     }
@@ -66,7 +71,7 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
         final JButton btnChooseDirectory = new JButton("...");
         btnChooseDirectory.setPreferredSize(new Dimension(26, 26));
         btnChooseDirectory.addActionListener(event -> {
-            transactionHistoryDirectory = showFileChooser("Könyvtár megnyitása", JFileChooser.DIRECTORIES_ONLY);
+            transactionHistoryDirectory = showFileChooser(this, "Könyvtár megnyitása", JFileChooser.DIRECTORIES_ONLY);
             if (transactionHistoryDirectory != null) {
                 tfSelectedDirectory.setText(transactionHistoryDirectory.getAbsolutePath());
             } else {
@@ -74,6 +79,8 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
             }
         });
         addComponent(btnChooseDirectory, querySettingsPanel, 3, 2);
+
+        querySettingsPanel.setBorder(BorderFactory.createTitledBorder("Lekérdezés beállítások"));
         return querySettingsPanel;
     }
 
@@ -85,6 +92,8 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
                         .contract((String) cbContracts.getSelectedItem())
                         .fromDate(dpFromDate.getDate())
                         .toDate(dpToDate.getDate())
+                        .useOnlineRates(rateSettingsPanel.useOnlineRates())
+                        .rateFile(rateSettingsPanel.getRateFile())
                         .transactionHistoryDirectory(transactionHistoryDirectory)
                         .build();
 
@@ -107,29 +116,34 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
 
     private boolean validateUserInput() {
         if (cbContracts.getSelectedItem() == null) {
-            showErrorDialog("Nincs szerződés kiválasztva!");
+            showErrorDialog(this, "Nincs szerződés kiválasztva!");
             return false;
         }
         final LocalDate fromDate = dpFromDate.getDate();
         if (fromDate == null) {
-            showErrorDialog("Nincs kezdő dátum kiválasztva!");
+            showErrorDialog(this, "Nincs kezdő dátum kiválasztva!");
             return false;
         }
         final LocalDate toDate = dpToDate.getDate();
         if (toDate == null) {
-            showErrorDialog("Nincs végdátum kiválasztva!");
+            showErrorDialog(this, "Nincs végdátum kiválasztva!");
             return false;
         }
         if (fromDate.isAfter(toDate)) {
-            showErrorDialog("Vég dátum nem lehet a kezdő dátum előtti!");
+            showErrorDialog(this, "Vég dátum nem lehet a kezdő dátum előtti!");
             return false;
         }
         if (transactionHistoryDirectory == null) {
-            showErrorDialog("Nincs adat mentési könyvtár kiválasztva!");
+            showErrorDialog(this, "Nincs adat mentési könyvtár kiválasztva!");
             return false;
         }
         if (!transactionHistoryDirectory.canWrite()) {
-            showErrorDialog("A kiválasztott adat mentési könyvtár nem írható!");
+            showErrorDialog(this, "A kiválasztott adat mentési könyvtár nem írható!");
+            return false;
+        }
+        final String rateSettingsErrorMessage = rateSettingsPanel.validateUserInputAndGetErrorMessage();
+        if (StringUtils.isNotEmpty(rateSettingsErrorMessage)) {
+            showErrorDialog(this, rateSettingsErrorMessage);
             return false;
         }
         return true;

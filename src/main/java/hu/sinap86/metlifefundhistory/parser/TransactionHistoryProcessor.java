@@ -1,8 +1,8 @@
 package hu.sinap86.metlifefundhistory.parser;
 
 import hu.sinap86.metlifefundhistory.model.FundHistory;
-import hu.sinap86.metlifefundhistory.util.Constants;
-import hu.sinap86.metlifefundhistory.util.Utils;
+import hu.sinap86.metlifefundhistory.config.Constants;
+import hu.sinap86.metlifefundhistory.util.CommonUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,7 +38,7 @@ public class TransactionHistoryProcessor {
             }
 
             final Collection<FundHistory> parsedHistories = parser.parse();
-            Utils.addHistoryElements(fundHistoryByName, parsedHistories);
+            CommonUtils.addHistoryElements(fundHistoryByName, parsedHistories);
             log.debug("Processed transaction detail data file: {}", transactionDataFile.getAbsolutePath());
         } catch (Exception e) {
             log.error("Cannot process transaction detail data: " + transactionDataFile.getAbsolutePath(), e);

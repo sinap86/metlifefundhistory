@@ -1,11 +1,11 @@
 package hu.sinap86.metlifefundhistory.parser;
 
-import static hu.sinap86.metlifefundhistory.util.Utils.getBigDecimal;
-import static hu.sinap86.metlifefundhistory.util.Utils.getString;
+import static hu.sinap86.metlifefundhistory.util.CommonUtils.getBigDecimal;
+import static hu.sinap86.metlifefundhistory.util.CommonUtils.getString;
 
 import hu.sinap86.metlifefundhistory.model.FundHistory;
 import hu.sinap86.metlifefundhistory.model.HistoryElement;
-import hu.sinap86.metlifefundhistory.util.Utils;
+import hu.sinap86.metlifefundhistory.util.CommonUtils;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -75,7 +75,7 @@ public class TransactionDataParser {
                     .rate(rate)
                     .priceDate(priceDate)
                     .build();
-            Utils.add(results, fundName, fundCode, historyElement);
+            CommonUtils.add(results, fundName, fundCode, historyElement);
         }
 
         return results;
@@ -84,7 +84,7 @@ public class TransactionDataParser {
     public static class TransactionDataParserFactory {
 
         public static TransactionDataParser getInstance(final File transactionDataFile) throws IOException {
-            final JsonObject rootObject = Utils.getAsJsonObject(transactionDataFile);
+            final JsonObject rootObject = CommonUtils.getAsJsonObject(transactionDataFile);
             final String transactionCode = getString(rootObject, "transactionCode");
             if (transactionCode == null) {
                 return null;

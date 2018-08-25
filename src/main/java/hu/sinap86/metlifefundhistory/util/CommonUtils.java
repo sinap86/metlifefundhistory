@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @UtilityClass
-public class Utils {
+public class CommonUtils {
 
     public static JsonObject getAsJsonObject(final File file) throws IOException {
         return new JsonParser().parse(new FileReader(file)).getAsJsonObject();

@@ -1,11 +1,11 @@
 package hu.sinap86.metlifefundhistory.parser;
 
-import static hu.sinap86.metlifefundhistory.util.Utils.getBigDecimal;
-import static hu.sinap86.metlifefundhistory.util.Utils.getString;
+import static hu.sinap86.metlifefundhistory.util.CommonUtils.getBigDecimal;
+import static hu.sinap86.metlifefundhistory.util.CommonUtils.getString;
 
 import hu.sinap86.metlifefundhistory.model.FundHistory;
 import hu.sinap86.metlifefundhistory.model.HistoryElement;
-import hu.sinap86.metlifefundhistory.util.Utils;
+import hu.sinap86.metlifefundhistory.util.CommonUtils;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -55,7 +55,7 @@ public class FundSwitchDataParser extends TransactionDataParser {
                     .rate(rate)
                     .priceDate(priceDate)
                     .build();
-            Utils.add(results, fundName, fundCode, historyElement);
+            CommonUtils.add(results, fundName, fundCode, historyElement);
         }
     }
 }

@@ -8,7 +8,7 @@ import static hu.sinap86.metlifefundhistory.util.XLSUtils.writeCells;
 import hu.sinap86.metlifefundhistory.model.FundHistory;
 import hu.sinap86.metlifefundhistory.model.HistoryElement;
 import hu.sinap86.metlifefundhistory.report.rate.RateProvider;
-import hu.sinap86.metlifefundhistory.util.Utils;
+import hu.sinap86.metlifefundhistory.util.CommonUtils;
 
 import com.google.common.collect.Lists;
 import lombok.Builder;
@@ -153,7 +153,7 @@ public class SpreadsheetTransactionHistoryPersister {
             totalBalance = history.getTotalBalance(rate);
             currentValue = totalUnits.multiply(rate);
         }
-        final BigDecimal averageInterestRate = Utils.calculateYearlyAverageInterestRate(totalBalance, history);
+        final BigDecimal averageInterestRate = CommonUtils.calculateYearlyAverageInterestRate(totalBalance, history);
 
         // Rendszeres díj kiegyenlítés (B522), Előrefizetés (T536)
         final BigDecimal depositSum = sumAmount(history, "B522", "T536");

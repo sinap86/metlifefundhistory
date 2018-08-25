@@ -1,73 +1,33 @@
 package hu.sinap86.metlifefundhistory.ui.dialog;
 
 import hu.sinap86.metlifefundhistory.config.ReportGeneratorSettings;
-import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
-
+import hu.sinap86.metlifefundhistory.ui.component.RateSettingsPanel;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ItemEvent;
 import java.io.File;
 
-import javax.swing.*;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.*;
 
 public class ReportGeneratorSettingsDialog extends BaseDialog {
 
     private ReportGeneratorSettings querySettings;
-
-    private File rateFile;
     private File transactionHistoryDirectory;
 
-    private JCheckBox chkUseOnlineRates;
+    private final RateSettingsPanel rateSettingsPanel;
     private JButton btnChooseTransactionHistoryDirectory;
-    private JButton btnChooseRateFile;
 
-    public ReportGeneratorSettingsDialog(final JFrame owner, final TransactionHistoryQuerySettings historyQuerySettings) {
+    public ReportGeneratorSettingsDialog(final JFrame owner) {
         super(owner, "Riport beállítások", true);
 
-        getContentPane().add(createRatePanel(), BorderLayout.NORTH);
-        if (historyQuerySettings == null) {
-            getContentPane().add(createHistoryDataPanel(), BorderLayout.CENTER);
-        } else {
-            // TODO esetleg + subdirectory, bár ez a mentéstől függ majd
-            transactionHistoryDirectory = historyQuerySettings.getTransactionHistoryDirectory();
-        }
+        rateSettingsPanel = new RateSettingsPanel();
+
+        getContentPane().add(rateSettingsPanel, BorderLayout.NORTH);
+        getContentPane().add(createHistoryDataPanel(), BorderLayout.CENTER);
         getContentPane().add(createButtonPanel(), BorderLayout.SOUTH);
 
         postConstruct(owner);
-    }
-
-    private JPanel createRatePanel() {
-        final JPanel ratePanel = new JPanel(new GridBagLayout());
-
-        chkUseOnlineRates = new JCheckBox("Online árfolyamok aktív alapoknál");
-        addComponent(chkUseOnlineRates, ratePanel, 0, 0, 3);
-
-        final JLabel lblRateFile = addLabel("Árfolyamok betöltése innen:", ratePanel, 1, 0);
-        lblRateFile.setPreferredSize(new Dimension(180, 26));
-
-        final JTextField tfRateFile = addTextField(20, ratePanel, 1, 1);
-        tfRateFile.setEnabled(false);
-
-        btnChooseRateFile = new JButton("...");
-        btnChooseRateFile.addActionListener(event -> {
-            rateFile = showFileChooser("Fájl megnyitása", JFileChooser.FILES_ONLY, XML_FILE_NAME_FILTER);
-            if (rateFile != null) {
-                // TODO validate if file is a valid XML file
-                tfRateFile.setText(rateFile.getAbsolutePath());
-            } else {
-                tfRateFile.setText(StringUtils.EMPTY);
-            }
-        });
-        addComponent(btnChooseRateFile, ratePanel, 1, 2);
-
-        chkUseOnlineRates.addItemListener((ItemEvent event) -> {
-            btnChooseRateFile.setEnabled(event.getStateChange() == ItemEvent.DESELECTED);
-            repaint();
-        });
-
-        ratePanel.setBorder(BorderFactory.createTitledBorder("Árfolyam beállítások"));
-        return ratePanel;
     }
 
     private JPanel createHistoryDataPanel() {
@@ -78,14 +38,11 @@ public class ReportGeneratorSettingsDialog extends BaseDialog {
 
         final JTextField tfSelectedDirectory = addTextField(20, historyDataPanel, 0, 1);
         tfSelectedDirectory.setEnabled(false);
-        if (transactionHistoryDirectory != null) {
-            tfSelectedDirectory.setText(transactionHistoryDirectory.getAbsolutePath());
-        }
 
         btnChooseTransactionHistoryDirectory = new JButton("...");
         btnChooseTransactionHistoryDirectory.setEnabled(transactionHistoryDirectory == null);
         btnChooseTransactionHistoryDirectory.addActionListener(event -> {
-            transactionHistoryDirectory = showFileChooser("Könyvtár megnyitása", JFileChooser.DIRECTORIES_ONLY);
+            transactionHistoryDirectory = showFileChooser(this, "Könyvtár megnyitása", JFileChooser.DIRECTORIES_ONLY);
             if (transactionHistoryDirectory != null) {
                 tfSelectedDirectory.setText(transactionHistoryDirectory.getAbsolutePath());
             } else {
@@ -103,8 +60,8 @@ public class ReportGeneratorSettingsDialog extends BaseDialog {
         btnGenerate.addActionListener(event -> {
             if (validateUserInput()) {
                 querySettings = ReportGeneratorSettings.builder()
-                        .useOnlineRates(chkUseOnlineRates.isSelected())
-                        .rateFile(rateFile)
+                        .useOnlineRates(rateSettingsPanel.useOnlineRates())
+                        .rateFile(rateSettingsPanel.getRateFile())
                         .transactionHistoryDirectory(transactionHistoryDirectory)
                         .build();
 
@@ -126,23 +83,18 @@ public class ReportGeneratorSettingsDialog extends BaseDialog {
     }
 
     private boolean validateUserInput() {
-        if (!chkUseOnlineRates.isSelected() && rateFile == null) {
-            showErrorDialog("Nincs árfolyam fájl kiválasztva!");
-            btnChooseRateFile.requestFocus();
-            return false;
-        }
-        if (rateFile != null && !rateFile.canRead()) {
-            showErrorDialog("A kiválasztott árfolyam fájl nem olvasható!");
-            btnChooseRateFile.requestFocus();
+        final String rateSettingsErrorMessage = rateSettingsPanel.validateUserInputAndGetErrorMessage();
+        if (StringUtils.isNotEmpty(rateSettingsErrorMessage)) {
+            showErrorDialog(this, rateSettingsErrorMessage);
             return false;
         }
         if (transactionHistoryDirectory == null) {
-            showErrorDialog("Nincs tranzakciós adatokat tartalmazó könyvtár kiválasztva!");
+            showErrorDialog(this, "Nincs tranzakciós adatokat tartalmazó könyvtár kiválasztva!");
             btnChooseTransactionHistoryDirectory.requestFocus();
             return false;
         }
         if (!transactionHistoryDirectory.canRead()) {
-            showErrorDialog("A kiválasztott tranzakciós adatokat tartalmazó könyvtár nem olvasható!");
+            showErrorDialog(this, "A kiválasztott tranzakciós adatokat tartalmazó könyvtár nem olvasható!");
             btnChooseTransactionHistoryDirectory.requestFocus();
             return false;
         }

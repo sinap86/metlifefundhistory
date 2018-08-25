@@ -1,17 +1,17 @@
 package hu.sinap86.metlifefundhistory.ui.dialog;
 
 import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.swing.*;
+import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
-import javax.swing.*;
-import javax.swing.border.EtchedBorder;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.*;
 
 public class LoginDialog extends BaseDialog {
 
@@ -92,13 +92,13 @@ public class LoginDialog extends BaseDialog {
             final String userName = tfName.getText();
             final char[] password = pfPassword.getPassword();
             if (StringUtils.isEmpty(userName)) {
-                showErrorDialog("Nem adott meg felhasználó nevet!");
+                showErrorDialog(LoginDialog.this, "Nem adott meg felhasználó nevet!");
                 tfName.requestFocus();
                 return;
             }
             if (ArrayUtils.isEmpty(password)) {
                 pfPassword.requestFocus();
-                showErrorDialog("Nem adott meg jelszót!");
+                showErrorDialog(LoginDialog.this, "Nem adott meg jelszót!");
                 return;
             }
 
@@ -110,7 +110,7 @@ public class LoginDialog extends BaseDialog {
                 tfSmsOtp.setEnabled(true);
                 tfSmsOtp.requestFocus();
             } else {
-                showErrorDialog("Hibás felhasználónév vagy jelszó!");
+                showErrorDialog(LoginDialog.this, "Hibás felhasználónév vagy jelszó!");
                 pfPassword.requestFocus();
             }
         }
@@ -118,7 +118,7 @@ public class LoginDialog extends BaseDialog {
         private void authenticateWithSmsOtp() {
             final String smsOtp = tfSmsOtp.getText();
             if (StringUtils.isEmpty(smsOtp)) {
-                showErrorDialog("Nem adott meg SMS kódot!");
+                showErrorDialog(LoginDialog.this, "Nem adott meg SMS kódot!");
                 tfSmsOtp.requestFocus();
                 return;
             }
@@ -128,7 +128,7 @@ public class LoginDialog extends BaseDialog {
                 setVisible(false);
                 dispose();
             } else {
-                showErrorDialog("Hibás SMS kód!");
+                showErrorDialog(LoginDialog.this, "Hibás SMS kód!");
                 tfSmsOtp.requestFocus();
             }
         }

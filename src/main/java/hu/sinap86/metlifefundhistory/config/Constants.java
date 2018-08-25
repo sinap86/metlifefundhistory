@@ -1,4 +1,4 @@
-package hu.sinap86.metlifefundhistory.util;
+package hu.sinap86.metlifefundhistory.config;
 
 import lombok.experimental.UtilityClass;
 

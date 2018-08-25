@@ -1,14 +1,15 @@
 package hu.sinap86.metlifefundhistory.ui.dialog;
 
 import hu.sinap86.metlifefundhistory.config.ApplicationConfig;
+import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.ui.component.JNumberTextField;
-import hu.sinap86.metlifefundhistory.util.Constants;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
 
-import javax.swing.*;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.*;
 
 public class SettingsDialog extends BaseDialog {
 
@@ -83,11 +84,11 @@ public class SettingsDialog extends BaseDialog {
                     ApplicationConfig.getInstance().setProxyScheme((String) cbProxyScheme.getSelectedItem());
                 }
                 JOptionPane.showMessageDialog(SettingsDialog.this,
-                                              "Sikeres mentés!",
-                                              "Beállítások",
-                                              JOptionPane.INFORMATION_MESSAGE);
+                        "Sikeres mentés!",
+                        "Beállítások",
+                        JOptionPane.INFORMATION_MESSAGE);
             } catch (final Exception e) {
-                showErrorDialog("Hiba történt a beállítások mentése során!");
+                showErrorDialog(this, "Hiba történt a beállítások mentése során!");
             }
             setVisible(false);
             dispose();

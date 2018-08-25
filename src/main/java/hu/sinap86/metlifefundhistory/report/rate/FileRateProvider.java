@@ -41,6 +41,7 @@ public class FileRateProvider implements RateProvider {
         if (StringUtils.isNotEmpty(fundRate)) {
             return new BigDecimal(fundRate);
         }
+        // TODO generate warning and show on UI
         log.warn("No exchange rate for '{}' fund, using 0 as value.", fundName);
         return BigDecimal.ZERO;
     }

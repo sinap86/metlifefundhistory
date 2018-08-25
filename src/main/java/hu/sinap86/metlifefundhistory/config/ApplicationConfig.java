@@ -1,7 +1,5 @@
 package hu.sinap86.metlifefundhistory.config;
 
-import hu.sinap86.metlifefundhistory.util.Constants;
-
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

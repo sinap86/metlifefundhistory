@@ -1,5 +1,6 @@
 package hu.sinap86.metlifefundhistory.ui;
 
+import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.config.ReportGeneratorSettings;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.exception.TransactionDataDownloadException;
@@ -8,7 +9,6 @@ import hu.sinap86.metlifefundhistory.ui.dialog.LoginDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.ReportGeneratorSettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.SettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.TransactionHistoryQuerySettingsDialog;
-import hu.sinap86.metlifefundhistory.util.Constants;
 import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
 import hu.sinap86.metlifefundhistory.web.TransactionDataDownloader;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +22,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+
+import static hu.sinap86.metlifefundhistory.util.UIUtils.showErrorDialog;
 
 @Slf4j
 public class ApplicationFrame extends JFrame {
@@ -103,10 +105,10 @@ public class ApplicationFrame extends JFrame {
         createReportMenuItem.setToolTipText("Korábban letöltött befektetési alap tranzakciós adatok feldolgozása és Excel riport készítése");
         createReportMenuItem.addActionListener(event -> {
             try {
-                showReportGeneratorSettingsDialog(null);
+                showReportGeneratorSettingsDialog();
             } catch (Exception e) {
                 log.error("Fatal error during report generation:", e);
-                showErrorDialog("Végzetes hiba történt!");
+                showErrorDialog(this, "Végzetes hiba történt!");
             }
         });
 
@@ -128,7 +130,7 @@ public class ApplicationFrame extends JFrame {
                 }
             } catch (Exception e) {
                 log.error("Fatal error during query report data and report generation:", e);
-                showErrorDialog("Végzetes hiba történt!");
+                showErrorDialog(this, "Végzetes hiba történt!");
             }
         });
 
@@ -156,45 +158,51 @@ public class ApplicationFrame extends JFrame {
         transactionHistoryQuerySettingsDialog.setVisible(true);
 
         final TransactionHistoryQuerySettings querySettings = transactionHistoryQuerySettingsDialog.getSettings();
+        log.debug("historyQuerySettings: {}", querySettings);
+
         if (querySettings != null) {
             // TODO validate settings
             try {
+                // TODO show process dialog
                 new TransactionDataDownloader(webSessionManager).download(querySettings);
 
-                showReportGeneratorSettingsDialog(querySettings);
+                generateReport(querySettings);
             } catch (TransactionDataDownloadException e) {
                 log.error("Cannot download transaction data:", e);
-                showErrorDialog("Sikertelen Online adatlekérdezés!");
+                showErrorDialog(this, "Sikertelen Online adatlekérdezés!");
             }
         }
     }
 
-    private void showReportGeneratorSettingsDialog(final TransactionHistoryQuerySettings historyQuerySettings) {
-        log.debug("historyQuerySettings: {}", historyQuerySettings);
-
-        final ReportGeneratorSettingsDialog reportGeneratorSettingsDialog = new ReportGeneratorSettingsDialog(this, historyQuerySettings);
+    private void showReportGeneratorSettingsDialog() {
+        final ReportGeneratorSettingsDialog reportGeneratorSettingsDialog = new ReportGeneratorSettingsDialog(this);
         reportGeneratorSettingsDialog.setVisible(true);
+
         final ReportGeneratorSettings reportGeneratorSettings = reportGeneratorSettingsDialog.getSettings();
         log.debug("reportGeneratorSettings: {}", reportGeneratorSettings);
 
         if (reportGeneratorSettings != null) {
             // TODO validate settings
-            try {
-                // TODO show process dialog
-                final FundReportGenerator reportGenerator = new FundReportGenerator(reportGeneratorSettings);
-                final File reportFile = reportGenerator.generate();
+            generateReport(reportGeneratorSettings);
+        }
+    }
 
-                showReportGeneratorResult(reportFile);
-            } catch (IOException e) {
-                log.error("Cannot generate fund report:", e);
-                showErrorDialog("Hiba történt riport generálás során!");
-            }
+    private void generateReport(final ReportGeneratorSettings settings) {
+        try {
+            // TODO show process dialog
+            final FundReportGenerator reportGenerator = new FundReportGenerator(settings);
+            final File reportFile = reportGenerator.generate();
+
+            showReportGeneratorResult(reportFile);
+        } catch (IOException e) {
+            log.error("Cannot generate fund report:", e);
+            showErrorDialog(this, "Hiba történt riport generálás során!");
         }
     }
 
     private void showReportGeneratorResult(final File reportFile) throws IOException {
         if (reportFile == null) {
-            showErrorDialog("Hiba történt riport generálás során!");
+            showErrorDialog(this, "Hiba történt riport generálás során!");
             return;
         }
 
@@ -221,10 +229,6 @@ public class ApplicationFrame extends JFrame {
                     title,
                     JOptionPane.INFORMATION_MESSAGE);
         }
-    }
-
-    protected void showErrorDialog(final String text) {
-        JOptionPane.showMessageDialog(this, text, "Hiba", JOptionPane.ERROR_MESSAGE);
     }
 
     private JMenuItem addMenuItem(final JMenu menu, final String text, final int mnemonic) {

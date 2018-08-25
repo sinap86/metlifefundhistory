@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.exception.TransactionDataDownloadException;
-import hu.sinap86.metlifefundhistory.util.Constants;
+import hu.sinap86.metlifefundhistory.config.Constants;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;

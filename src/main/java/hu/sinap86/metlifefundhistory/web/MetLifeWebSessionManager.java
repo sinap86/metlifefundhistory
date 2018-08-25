@@ -3,8 +3,8 @@ package hu.sinap86.metlifefundhistory.web;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
-import hu.sinap86.metlifefundhistory.util.Constants;
-import hu.sinap86.metlifefundhistory.util.Utils;
+import hu.sinap86.metlifefundhistory.config.Constants;
+import hu.sinap86.metlifefundhistory.util.CommonUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -68,7 +68,7 @@ public class MetLifeWebSessionManager {
 
     private JsonObject getJsonObject(final File file) {
         try {
-            return Utils.getAsJsonObject(file);
+            return CommonUtils.getAsJsonObject(file);
         } catch (IOException e) {
             log.error("Cannot read JSON content from: " + file.getAbsolutePath());
             return new JsonObject();

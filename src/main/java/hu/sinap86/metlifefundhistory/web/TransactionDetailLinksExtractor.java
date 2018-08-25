@@ -14,7 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static hu.sinap86.metlifefundhistory.util.Utils.getString;
+import static hu.sinap86.metlifefundhistory.util.CommonUtils.getString;
 
 @Slf4j
 public class TransactionDetailLinksExtractor {
