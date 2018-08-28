@@ -5,6 +5,7 @@ import hu.sinap86.metlifefundhistory.config.ReportGeneratorSettings;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.exception.TransactionDataDownloadException;
 import hu.sinap86.metlifefundhistory.report.FundReportGenerator;
+import hu.sinap86.metlifefundhistory.ui.component.LoginInfoPanel;
 import hu.sinap86.metlifefundhistory.ui.dialog.LoginDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.ReportGeneratorSettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.SettingsDialog;
@@ -30,13 +31,15 @@ public class ApplicationFrame extends JFrame {
 
     private final MetLifeWebSessionManager webSessionManager = new MetLifeWebSessionManager();
 
+    private JComponent usageDescriptionPanel;
+
     public ApplicationFrame() {
         initUI();
     }
 
     private void initUI() {
         createMenuBar();
-        createUsageDescription();
+        usageDescriptionPanel = createUsageDescription();
 
         setTitle("MetLife tranzakció történet elemző");
         setSize(500, 400);
@@ -62,9 +65,9 @@ public class ApplicationFrame extends JFrame {
         }
     }
 
-    private void createUsageDescription() {
-        HTMLEditorKit kit = new HTMLEditorKit();
-        Document doc = kit.createDefaultDocument();
+    private JComponent createUsageDescription() {
+        final HTMLEditorKit kit = new HTMLEditorKit();
+        final Document doc = kit.createDefaultDocument();
 
         final JEditorPane descriptionEditorPane = new JEditorPane();
         descriptionEditorPane.setDocument(doc);
@@ -77,8 +80,9 @@ public class ApplicationFrame extends JFrame {
         descriptionEditorPane.setEditable(false);
         descriptionEditorPane.setContentType("text/html");
 
-        JScrollPane scrollPanel = new JScrollPane(descriptionEditorPane);
-        getContentPane().add(scrollPanel, BorderLayout.CENTER);
+        final JScrollPane scrollPane = new JScrollPane(descriptionEditorPane);
+        getContentPane().add(scrollPane, BorderLayout.CENTER);
+        return scrollPane;
     }
 
     private void createMenuBar() {
@@ -123,7 +127,7 @@ public class ApplicationFrame extends JFrame {
                     loginDialog.setVisible(true);
 
                     if (webSessionManager.isAuthenticated()) {
-                        // TODO show user and contract information instead of UsageDescription
+                        swapUsageDescriptionToLoginInfo();
 
                         showTransactionHistoryQueryAndReportGeneratorSettingsDialog();
                     }
@@ -151,6 +155,15 @@ public class ApplicationFrame extends JFrame {
         menuBar.add(helpMenu);
 
         setJMenuBar(menuBar);
+    }
+
+    private void swapUsageDescriptionToLoginInfo() {
+        final LoginInfoPanel loginInfoPanel = new LoginInfoPanel(webSessionManager);
+
+        remove(usageDescriptionPanel);
+        add(loginInfoPanel);
+        invalidate();
+        validate();
     }
 
     private void showTransactionHistoryQueryAndReportGeneratorSettingsDialog() {

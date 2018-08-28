@@ -3,6 +3,7 @@ package hu.sinap86.metlifefundhistory.ui.dialog;
 import com.github.lgooddatepicker.components.DatePicker;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.ui.component.RateSettingsPanel;
+import hu.sinap86.metlifefundhistory.util.CommonUtils;
 import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -12,6 +13,8 @@ import java.awt.*;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static hu.sinap86.metlifefundhistory.util.UIUtils.*;
 
@@ -29,7 +32,7 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
     public TransactionHistoryQuerySettingsDialog(final Frame owner, final MetLifeWebSessionManager webSessionManager) {
         super(owner, "Lekérdezés beállítások", true);
 
-        final Collection<String> contracts = webSessionManager.getUserContracts();
+        final List<MetLifeWebSessionManager.Contract> contracts = webSessionManager.getUserContracts();
 
         rateSettingsPanel = new RateSettingsPanel();
 
@@ -40,12 +43,13 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
         postConstruct(owner);
     }
 
-    private JPanel createQuerySettingsPanel(final Collection<String> contracts) {
+    private JPanel createQuerySettingsPanel(final List<MetLifeWebSessionManager.Contract> contracts) {
         final JPanel querySettingsPanel = new JPanel(new GridBagLayout());
 
         addLabel("Szerződések:", querySettingsPanel, 0, 0);
 
-        cbContracts = new JComboBox<>(contracts.toArray(new String[]{}));
+        final String[] contractIds = contracts.stream().map(MetLifeWebSessionManager.Contract::getId).toArray(String[]::new);
+        cbContracts = new JComboBox<>(contractIds);
         cbContracts.setSelectedIndex(0);
         cbContracts.setEnabled(CollectionUtils.size(contracts) > 1);
         cbContracts.setPreferredSize(new Dimension(100, 26));

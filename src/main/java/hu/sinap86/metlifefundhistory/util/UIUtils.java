@@ -43,7 +43,12 @@ public class UIUtils {
 
     public static JLabel addLabel(final String text, final Container container,
                                   final int row, final int column) {
-        return addComponent(new JLabel(text), container, row, column);
+        return addLabel(text, container, row, column, null);
+    }
+
+    public static JLabel addLabel(final String text, final Container container,
+                                  final int row, final int column, final Integer columnWidth) {
+        return addComponent(new JLabel(text), container, row, column, columnWidth);
     }
 
     public static JTextField addTextField(final int columns, final Container container,
@@ -67,15 +72,21 @@ public class UIUtils {
     }
 
     public static GridBagConstraints getConstraints(final int row, final int column, final Integer columnWidth) {
-        final GridBagConstraints gc = new GridBagConstraints();
-        gc.fill = GridBagConstraints.HORIZONTAL;
-        gc.insets = new Insets(4, 0, 4, 4);  // padding
-        gc.gridx = column;
-        gc.gridy = row;
+        final GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = (column == 0) ? GridBagConstraints.BOTH : GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(4, 4, 4, 4);  // padding
+        gbc.gridx = column;
+        gbc.gridy = row;
         if (columnWidth != null) {
-            gc.gridwidth = columnWidth;
+            gbc.gridwidth = columnWidth;
         }
-        return gc;
+        gbc.gridheight = 1;
+        gbc.anchor = (column == 0) ? GridBagConstraints.WEST : GridBagConstraints.EAST;
+
+        gbc.weightx = (column == 0) ? 0.1 : 1.0;
+        gbc.weighty = 1.0;
+
+        return gbc;
     }
 
     public static DatePicker createDatePicker() {

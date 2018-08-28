@@ -55,8 +55,8 @@ public class TransactionDetailLinksExtractor {
         }
     }
 
-    @Getter
     @Builder
+    @Getter
     @ToString
     public static class Link {
         private TransactionGroup group;

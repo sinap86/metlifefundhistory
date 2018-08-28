@@ -2,6 +2,8 @@ package hu.sinap86.metlifefundhistory.config;
 
 import lombok.experimental.UtilityClass;
 
+import java.text.DecimalFormat;
+
 @UtilityClass
 public class Constants {
 
@@ -13,4 +15,6 @@ public class Constants {
 
     // TODO settings?
     public static final String REPORT_FILE_NAME = "results.xlsx";
+
+    public static final DecimalFormat UI_AMOUNT_FORMAT = new DecimalFormat("###,##0.##");
 }

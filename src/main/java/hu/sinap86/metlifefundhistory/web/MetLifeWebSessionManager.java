@@ -2,18 +2,42 @@ package hu.sinap86.metlifefundhistory.web;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
-import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.config.Constants;
+import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.util.CommonUtils;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
+import java.util.List;
 
 // TODO call MetLife through REST api
 @Slf4j
 public class MetLifeWebSessionManager {
+
+    @Builder
+    @Getter
+    public static class User {
+        private String id;
+        private String name;
+        private String lastLogin;
+    }
+
+    @Builder
+    @Getter
+    public static class Contract {
+        private String id;
+        private String name;
+        private String contractTypeNumber;
+        private String contractTypeName;
+        private String currency;
+        private double actualValue;
+        private double surrenderValue;
+        private double dueAmount;
+        private String paidToDate;
+    }
 
     private boolean authenticationWithPasswordSucceeded;
     private boolean authenticationWithSmsOtpSucceeded;
@@ -43,8 +67,29 @@ public class MetLifeWebSessionManager {
         return authenticationWithSmsOtpSucceeded;
     }
 
-    public Collection<String> getUserContracts() {
-        return Lists.newArrayList("00177736");
+    public User getUser() {
+        return User.builder()
+                .id("123456")
+                .name("Kovács Béla")
+                .lastLogin("2018.07.18 10:35:56")
+                .build();
+    }
+
+    public List<Contract> getUserContracts() {
+        final Contract contract = Contract.builder()
+                .id("123456")
+                .name("Presztízs")
+                .contractTypeNumber("653")
+                .contractTypeName("befektetéshez kötött életbiztosítás")
+                .currency("HUF")
+                .actualValue(3608514.8118382804)
+                .surrenderValue(3241519.36)
+                .dueAmount(0)
+                .paidToDate("2018-12-28")
+                .build();
+        return Lists.newArrayList(contract
+//                , contract, contract, contract, contract
+        );
     }
 
     public void logout() {
@@ -53,7 +98,7 @@ public class MetLifeWebSessionManager {
 
     public JsonObject queryTransactionHistory(final TransactionHistoryQuerySettings querySettings) {
         final File file = new File("./data/transactions_20110617-20180717.json");
-        return getJsonObject(file);
+        return getJsonObjectSafe(file);
     }
 
     public JsonObject queryTransactionData(final TransactionDetailLinksExtractor.Link url) {
@@ -63,10 +108,10 @@ public class MetLifeWebSessionManager {
                 + groupName + '/'
                 + url.getTransactionNumber() + Constants.JSON_FILE_EXTENSION
         );
-        return getJsonObject(file);
+        return getJsonObjectSafe(file);
     }
 
-    private JsonObject getJsonObject(final File file) {
+    private JsonObject getJsonObjectSafe(final File file) {
         try {
             return CommonUtils.getAsJsonObject(file);
         } catch (IOException e) {
@@ -74,4 +119,5 @@ public class MetLifeWebSessionManager {
             return new JsonObject();
         }
     }
+
 }
