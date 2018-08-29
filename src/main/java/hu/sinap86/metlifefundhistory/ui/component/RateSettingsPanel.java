@@ -1,7 +1,5 @@
 package hu.sinap86.metlifefundhistory.ui.component;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
@@ -20,6 +18,8 @@ public class RateSettingsPanel extends JPanel {
         super(new GridBagLayout());
 
         chkUseOnlineRates = new JCheckBox("Online árfolyamok aktív alapoknál");
+        // TODO enable when online rate provider implemented
+        chkUseOnlineRates.setEnabled(false);
         addComponent(chkUseOnlineRates, this, 0, 0, 3);
 
         final JLabel lblRateFile = addLabel("Árfolyamok betöltése innen:", this, 1, 0);
@@ -30,12 +30,10 @@ public class RateSettingsPanel extends JPanel {
 
         btnChooseRateFile = new JButton("...");
         btnChooseRateFile.addActionListener(event -> {
-            rateFile = showFileChooser(this, "Fájl megnyitása", JFileChooser.FILES_ONLY, XML_FILE_NAME_FILTER);
-            if (rateFile != null) {
-                // TODO validate if file is a valid XML file
+            final File selectedFile = showFileChooser(this, "Fájl megnyitása", JFileChooser.FILES_ONLY, XML_FILE_NAME_FILTER);
+            if (selectedFile != null) {
+                rateFile = selectedFile;
                 tfRateFile.setText(rateFile.getAbsolutePath());
-            } else {
-                tfRateFile.setText(StringUtils.EMPTY);
             }
         });
         addComponent(btnChooseRateFile, this, 1, 2);

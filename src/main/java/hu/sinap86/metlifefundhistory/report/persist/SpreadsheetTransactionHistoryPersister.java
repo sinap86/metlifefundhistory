@@ -37,8 +37,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Slf4j
-// TODO rename
-// TODO super interface
 public class SpreadsheetTransactionHistoryPersister {
 
     @Data

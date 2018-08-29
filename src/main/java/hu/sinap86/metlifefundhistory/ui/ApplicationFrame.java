@@ -176,7 +176,6 @@ public class ApplicationFrame extends JFrame {
         if (querySettings == null) {
             return;
         }
-        // TODO validate settings
 
         downloadTransactionHistoryAndGenerateReport(querySettings);
     }
@@ -224,15 +223,15 @@ public class ApplicationFrame extends JFrame {
         final ReportGeneratorSettings reportGeneratorSettings = reportGeneratorSettingsDialog.getSettings();
         log.debug("reportGeneratorSettings: {}", reportGeneratorSettings);
 
-        if (reportGeneratorSettings != null) {
-            // TODO validate settings
-            generateReport(reportGeneratorSettings);
+        if (reportGeneratorSettings == null) {
+            return;
         }
+
+        generateReport(reportGeneratorSettings);
     }
 
     private void generateReport(final ReportGeneratorSettings settings) {
         try {
-            // TODO show process dialog
             final FundReportGenerator reportGenerator = new FundReportGenerator(settings);
             final File reportFile = reportGenerator.generate();
 
