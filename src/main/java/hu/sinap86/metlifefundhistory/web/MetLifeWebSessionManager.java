@@ -1,10 +1,11 @@
 package hu.sinap86.metlifefundhistory.web;
 
-import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
 import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.util.CommonUtils;
+
+import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 // TODO call MetLife through REST api
 @Slf4j
@@ -20,6 +22,7 @@ public class MetLifeWebSessionManager {
     @Builder
     @Getter
     public static class User {
+
         private String id;
         private String name;
         private String lastLogin;
@@ -28,6 +31,7 @@ public class MetLifeWebSessionManager {
     @Builder
     @Getter
     public static class Contract {
+
         private String id;
         private String name;
         private String contractTypeNumber;
@@ -97,16 +101,27 @@ public class MetLifeWebSessionManager {
     }
 
     public JsonObject queryTransactionHistory(final TransactionHistoryQuerySettings querySettings) {
+        delay(100);
+
+        try {
+            //delay for task simulation
+            TimeUnit.MILLISECONDS.sleep(2000);
+        } catch (InterruptedException e) {
+            System.err.println(e);
+        }
+
         final File file = new File("./data/transactions_20110617-20180717.json");
         return getJsonObjectSafe(file);
     }
 
     public JsonObject queryTransactionData(final TransactionDetailLinksExtractor.Link url) {
+        delay(10);
+
         final String groupName = url.getGroup() == TransactionDetailLinksExtractor.TransactionGroup.RENEWALS_ANNIVERSARY ?
-                "renewalsanniversaryprocess" : url.getGroup().getGroupName().toLowerCase();
+                                 "renewalsanniversaryprocess" : url.getGroup().getGroupName().toLowerCase();
         final File file = new File("./data/transactions/"
-                + groupName + '/'
-                + url.getTransactionNumber() + Constants.JSON_FILE_EXTENSION
+                                   + groupName + '/'
+                                   + url.getTransactionNumber() + Constants.JSON_FILE_EXTENSION
         );
         return getJsonObjectSafe(file);
     }
@@ -117,6 +132,15 @@ public class MetLifeWebSessionManager {
         } catch (IOException e) {
             log.error("Cannot read JSON content from: " + file.getAbsolutePath());
             return new JsonObject();
+        }
+    }
+
+    // delay for task simulation
+    private void delay(final int timeout) {
+        try {
+            TimeUnit.MILLISECONDS.sleep(timeout);
+        } catch (InterruptedException e) {
+            log.error("", e);
         }
     }
 

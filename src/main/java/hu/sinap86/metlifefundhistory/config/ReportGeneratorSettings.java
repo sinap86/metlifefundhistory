@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.io.File;
 
@@ -11,6 +12,7 @@ import java.io.File;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class ReportGeneratorSettings {
 
     protected boolean useOnlineRates;

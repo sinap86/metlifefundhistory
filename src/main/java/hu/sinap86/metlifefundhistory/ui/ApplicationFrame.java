@@ -3,7 +3,6 @@ package hu.sinap86.metlifefundhistory.ui;
 import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.config.ReportGeneratorSettings;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
-import hu.sinap86.metlifefundhistory.exception.TransactionDataDownloadException;
 import hu.sinap86.metlifefundhistory.report.FundReportGenerator;
 import hu.sinap86.metlifefundhistory.ui.component.LoginInfoPanel;
 import hu.sinap86.metlifefundhistory.ui.dialog.LoginDialog;
@@ -21,6 +20,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 
@@ -173,17 +173,47 @@ public class ApplicationFrame extends JFrame {
         final TransactionHistoryQuerySettings querySettings = transactionHistoryQuerySettingsDialog.getSettings();
         log.debug("historyQuerySettings: {}", querySettings);
 
-        if (querySettings != null) {
-            // TODO validate settings
-            try {
-                // TODO show process dialog
-                new TransactionDataDownloader(webSessionManager).download(querySettings);
+        if (querySettings == null) {
+            return;
+        }
+        // TODO validate settings
 
-                generateReport(querySettings);
-            } catch (TransactionDataDownloadException e) {
-                log.error("Cannot download transaction data:", e);
-                showErrorDialog(this, "Sikertelen Online adatlekérdezés!");
-            }
+        downloadTransactionHistoryAndGenerateReport(querySettings);
+    }
+
+    private void downloadTransactionHistoryAndGenerateReport(final TransactionHistoryQuerySettings querySettings) {
+        try {
+            UIManager.put("ProgressMonitor.progressText", "Online adatletöltés");
+            UIManager.put("OptionPane.cancelButtonText", "Mégse");
+            final ProgressMonitor progressMonitor = new ProgressMonitor(this, null,
+                    "Tranzakciós lista lekérdezése . . .",
+                    0, 100);
+            progressMonitor.setMillisToDecideToPopup(0);
+            progressMonitor.setProgress(0);
+
+            final TransactionDataDownloader downloader = new TransactionDataDownloader(webSessionManager, querySettings);
+
+            final PropertyChangeListener downloadProgressListener = evt -> {
+                final String propertyName = evt.getPropertyName();
+                final Object newValue = evt.getNewValue();
+                if ("progress".equals(propertyName)) {
+                    final int progress = (Integer) newValue;
+                    progressMonitor.setProgress(progress);
+                    progressMonitor.setNote(String.format("Tranzakciók letöltve: %d%%.\n", progress));
+                }
+                if ("state".equals(propertyName) && SwingWorker.StateValue.DONE.equals(newValue)) {
+                    generateReport(querySettings);
+                }
+                if (progressMonitor.isCanceled()) {
+                    downloader.cancel(true);
+                }
+            };
+
+            downloader.addPropertyChangeListener(downloadProgressListener);
+            downloader.execute();
+        } catch (Exception e) {
+            log.error("Cannot download transaction data:", e);
+            showErrorDialog(this, "Sikertelen Online adatlekérdezés!");
         }
     }
 

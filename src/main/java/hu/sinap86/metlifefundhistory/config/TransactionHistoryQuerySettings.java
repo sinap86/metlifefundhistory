@@ -1,11 +1,13 @@
 package hu.sinap86.metlifefundhistory.config;
 
 import lombok.Getter;
+import lombok.ToString;
 
 import java.io.File;
 import java.time.LocalDate;
 
 @Getter
+@ToString
 public class TransactionHistoryQuerySettings extends ReportGeneratorSettings {
 
     private String contract;
