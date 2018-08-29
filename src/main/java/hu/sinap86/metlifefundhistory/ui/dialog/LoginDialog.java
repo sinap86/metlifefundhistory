@@ -62,6 +62,7 @@ public class LoginDialog extends BaseDialog {
     private JPanel createButtonPanel(final boolean authenticationWithPasswordSucceeded) {
         btnLogin = new JButton(authenticationWithPasswordSucceeded ? "Bejelentkezés" : "Tovább a második lépéshez");
         btnLogin.addActionListener(new LoginButtonActionListener());
+        getRootPane().setDefaultButton(btnLogin);
 
         final JButton btnCancel = new JButton("Mégse");
         btnCancel.addActionListener(event -> {

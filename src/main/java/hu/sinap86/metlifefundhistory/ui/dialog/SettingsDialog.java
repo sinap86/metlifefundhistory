@@ -93,6 +93,7 @@ public class SettingsDialog extends BaseDialog {
             setVisible(false);
             dispose();
         });
+        getRootPane().setDefaultButton(btnSave);
 
         final JPanel buttonPanel = new JPanel();
         buttonPanel.add(btnSave);

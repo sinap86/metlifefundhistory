@@ -3,7 +3,6 @@ package hu.sinap86.metlifefundhistory.ui.dialog;
 import com.github.lgooddatepicker.components.DatePicker;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.ui.component.RateSettingsPanel;
-import hu.sinap86.metlifefundhistory.util.CommonUtils;
 import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -12,9 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static hu.sinap86.metlifefundhistory.util.UIUtils.*;
 
@@ -75,11 +72,10 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
         final JButton btnChooseDirectory = new JButton("...");
         btnChooseDirectory.setPreferredSize(new Dimension(26, 26));
         btnChooseDirectory.addActionListener(event -> {
-            transactionHistoryDirectory = showFileChooser(this, "Könyvtár megnyitása", JFileChooser.DIRECTORIES_ONLY);
-            if (transactionHistoryDirectory != null) {
+            final File selectedDirectory = showFileChooser(this, "Könyvtár megnyitása", JFileChooser.DIRECTORIES_ONLY);
+            if (selectedDirectory != null) {
+                transactionHistoryDirectory = selectedDirectory;
                 tfSelectedDirectory.setText(transactionHistoryDirectory.getAbsolutePath());
-            } else {
-                tfSelectedDirectory.setText(StringUtils.EMPTY);
             }
         });
         addComponent(btnChooseDirectory, querySettingsPanel, 3, 2);

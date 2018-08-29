@@ -42,11 +42,10 @@ public class ReportGeneratorSettingsDialog extends BaseDialog {
         btnChooseTransactionHistoryDirectory = new JButton("...");
         btnChooseTransactionHistoryDirectory.setEnabled(transactionHistoryDirectory == null);
         btnChooseTransactionHistoryDirectory.addActionListener(event -> {
-            transactionHistoryDirectory = showFileChooser(this, "Könyvtár megnyitása", JFileChooser.DIRECTORIES_ONLY);
-            if (transactionHistoryDirectory != null) {
+            final File selectedDirectory = showFileChooser(this, "Könyvtár megnyitása", JFileChooser.DIRECTORIES_ONLY);
+            if (selectedDirectory != null) {
+                transactionHistoryDirectory = selectedDirectory;
                 tfSelectedDirectory.setText(transactionHistoryDirectory.getAbsolutePath());
-            } else {
-                tfSelectedDirectory.setText(StringUtils.EMPTY);
             }
         });
         addComponent(btnChooseTransactionHistoryDirectory, historyDataPanel, 0, 2);
