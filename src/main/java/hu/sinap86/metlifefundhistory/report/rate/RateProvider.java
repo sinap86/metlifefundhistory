@@ -6,6 +6,6 @@ public interface RateProvider {
 
     String getRateDate();
 
-    BigDecimal getExchangeRateOrZero(final String fundName);
+    BigDecimal getExchangeRate(final String fundName);
 
 }

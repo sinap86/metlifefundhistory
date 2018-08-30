@@ -1,5 +1,9 @@
 package hu.sinap86.metlifefundhistory.ui;
 
+import static hu.sinap86.metlifefundhistory.util.UIUtils.addComponent;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.addLabel;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.showErrorDialog;
+
 import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.config.ReportGeneratorSettings;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
@@ -11,11 +15,10 @@ import hu.sinap86.metlifefundhistory.ui.dialog.SettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.TransactionHistoryQuerySettingsDialog;
 import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
 import hu.sinap86.metlifefundhistory.web.TransactionDataDownloader;
-import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.*;
-import javax.swing.text.Document;
-import javax.swing.text.html.HTMLEditorKit;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -23,8 +26,11 @@ import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
-import static hu.sinap86.metlifefundhistory.util.UIUtils.showErrorDialog;
+import javax.swing.*;
+import javax.swing.text.Document;
+import javax.swing.text.html.HTMLEditorKit;
 
 @Slf4j
 public class ApplicationFrame extends JFrame {
@@ -55,9 +61,9 @@ public class ApplicationFrame extends JFrame {
 
     private void logoutAndClose() {
         if (JOptionPane.showConfirmDialog(this,
-                "Biztosan kilép?", "Kilépés",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+                                          "Biztosan kilép?", "Kilépés",
+                                          JOptionPane.YES_NO_OPTION,
+                                          JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
             if (webSessionManager.isAuthenticated()) {
                 webSessionManager.logout();
             }
@@ -185,8 +191,8 @@ public class ApplicationFrame extends JFrame {
             UIManager.put("ProgressMonitor.progressText", "Online adatletöltés");
             UIManager.put("OptionPane.cancelButtonText", "Mégse");
             final ProgressMonitor progressMonitor = new ProgressMonitor(this, null,
-                    "Tranzakciós lista lekérdezése . . .",
-                    0, 100);
+                                                                        "Tranzakciós lista lekérdezése . . .",
+                                                                        0, 100);
             progressMonitor.setMillisToDecideToPopup(0);
             progressMonitor.setProgress(0);
 
@@ -233,43 +239,62 @@ public class ApplicationFrame extends JFrame {
     private void generateReport(final ReportGeneratorSettings settings) {
         try {
             final FundReportGenerator reportGenerator = new FundReportGenerator(settings);
-            final File reportFile = reportGenerator.generate();
+            final FundReportGenerator.Result generatorResult = reportGenerator.generate();
 
-            showReportGeneratorResult(reportFile);
+            showReportGeneratorResult(generatorResult);
         } catch (IOException e) {
             log.error("Cannot generate fund report:", e);
             showErrorDialog(this, "Hiba történt riport generálás során!");
         }
     }
 
-    private void showReportGeneratorResult(final File reportFile) throws IOException {
-        if (reportFile == null) {
+    private void showReportGeneratorResult(final FundReportGenerator.Result generatorResult) throws IOException {
+        if (generatorResult == null || generatorResult.getReportFile() == null) {
             showErrorDialog(this, "Hiba történt riport generálás során!");
             return;
         }
 
-        final String title = "Siker";
-        final String message = String.format("Sikeres riport generálás: %s", reportFile.getAbsolutePath());
+        final File reportFile = generatorResult.getReportFile();
+        final List<String> warnings = generatorResult.getWarnings();
 
-        if (Desktop.isDesktopSupported()) {
-            final Object[] options = {"Megnyitás", "Ok"};
-            final int result = JOptionPane.showOptionDialog(this,
-                    message,
-                    title,
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE,
-                    null,
-                    options,
-                    null);
-            if (result == JOptionPane.YES_OPTION) {
-                Desktop.getDesktop().open(reportFile);
-            }
+        final Object message;
+        final int messageType;
+        if (CollectionUtils.isEmpty(warnings)) {
+            message = String.format("Sikeres riport generálás: %s", reportFile.getAbsolutePath());
+            messageType = JOptionPane.INFORMATION_MESSAGE;
         } else {
-            log.warn("Desktop not supported!");
-            JOptionPane.showMessageDialog(this,
-                    message,
-                    title,
-                    JOptionPane.INFORMATION_MESSAGE);
+            final JPanel customPanel = new JPanel(new GridBagLayout());
+            addLabel(String.format("Riport generálás figyelmeztetésekkel lezárult:\n %s",
+                                   reportFile.getAbsolutePath()),
+                     customPanel, 0, 0);
+            final JTextArea textArea = new JTextArea(6, 50);
+            textArea.setEditable(false);
+            textArea.setFont(textArea.getFont().deriveFont(12f));
+            for (String warning : warnings) {
+                textArea.append(warning);
+                textArea.append("\n");
+            }
+            addComponent(new JScrollPane(textArea), customPanel, 1, 0);
+
+            message = customPanel;
+            messageType = JOptionPane.WARNING_MESSAGE;
+        }
+
+        final boolean desktopSupported = Desktop.isDesktopSupported();
+        final Object[] options = desktopSupported ? new Object[]{ "Megnyitás", "Ok" } : new Object[]{ "Ok" };
+        final int buttonType = desktopSupported ? JOptionPane.YES_NO_OPTION : JOptionPane.YES_OPTION;
+
+        final int result = JOptionPane.showOptionDialog(this,
+                                                        message,
+                                                        "Riport generálás",
+                                                        buttonType,
+                                                        messageType,
+                                                        null,
+                                                        options,
+                                                        null);
+
+        if (result == JOptionPane.YES_OPTION && desktopSupported) {
+            Desktop.getDesktop().open(reportFile);
         }
     }
 

@@ -13,7 +13,7 @@ public class OnlineRateProvider implements RateProvider {
     }
 
     @Override
-    public BigDecimal getExchangeRateOrZero(final String fundName) {
+    public BigDecimal getExchangeRate(final String fundName) {
         // TODO implement
         throw new NotImplementedException("Not implemented yet!");
     }

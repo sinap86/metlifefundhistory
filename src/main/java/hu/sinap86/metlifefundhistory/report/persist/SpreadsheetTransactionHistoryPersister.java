@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,7 @@ public class SpreadsheetTransactionHistoryPersister {
     private final File resultFile;
     private final RateProvider rateProvider;
     private final XSSFWorkbook workbook;
+    private final List<String> warnings = new ArrayList<>();
     private CellStyle sheetHeaderCellStyle;
     private XSSFSheet summarySheet;
 
@@ -89,7 +91,9 @@ public class SpreadsheetTransactionHistoryPersister {
         summarySheet.createFreezePane(0, 1);
     }
 
-    public void persist(final Map<String, FundHistory> fundHistoryByName) throws IOException {
+    public List<String> persist(final Map<String, FundHistory> fundHistoryByName) throws IOException {
+        warnings.clear();
+
         final CellStyle unitStyle = createCellStyle(CELL_STYLE_UNIT);
         final CellStyle rateStyle = createCellStyle(CELL_STYLE_RATE);
         final CellStyle amountStyle = createCellStyle(CELL_STYLE_AMOUNT);
@@ -123,6 +127,7 @@ public class SpreadsheetTransactionHistoryPersister {
             workbook.write(fileOut);
             log.info("Results written into: {}", resultFile.getAbsolutePath());
         }
+        return warnings;
     }
 
     private void createFundSheetHeader(final XSSFSheet sheet) {
@@ -147,7 +152,7 @@ public class SpreadsheetTransactionHistoryPersister {
             totalBalance = history.getTotalBalance();
             currentValue = null;
         } else {
-            rate = rateProvider.getExchangeRateOrZero(fundName);
+            rate = getExchangeRateOrZero(fundName);
             totalBalance = history.getTotalBalance(rate);
             currentValue = totalUnits.multiply(rate);
         }
@@ -168,6 +173,16 @@ public class SpreadsheetTransactionHistoryPersister {
                 .averageInterestRate(averageInterestRate)
                 .fundSold(fundSold)
                 .build();
+    }
+
+    private BigDecimal getExchangeRateOrZero(final String fundName) {
+        BigDecimal fundRate = rateProvider.getExchangeRate(fundName);
+        if (fundRate == null) {
+            fundRate = BigDecimal.ZERO;
+            log.warn("No exchange rate for '{}' fund, using 0 as value.", fundName);
+            warnings.add(String.format("Nem található árfolyam a(z) '%s' alaphoz!", fundName));
+        }
+        return fundRate;
     }
 
     private void createFundSheetTotalRows(final XSSFSheet sheet, final FundHistorySummary fundHistorySummary) {
