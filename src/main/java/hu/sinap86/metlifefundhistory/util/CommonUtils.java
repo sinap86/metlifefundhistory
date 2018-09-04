@@ -1,11 +1,10 @@
 package hu.sinap86.metlifefundhistory.util;
 
-import hu.sinap86.metlifefundhistory.model.FundHistory;
-import hu.sinap86.metlifefundhistory.model.HistoryElement;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import hu.sinap86.metlifefundhistory.model.FundHistory;
+import hu.sinap86.metlifefundhistory.model.HistoryElement;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 
@@ -14,17 +13,19 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.*;
 
 @UtilityClass
 public class CommonUtils {
 
     public static JsonObject getAsJsonObject(final File file) throws IOException {
         return new JsonParser().parse(new FileReader(file)).getAsJsonObject();
+    }
+
+    public static JsonObject getAsJsonObject(final String json) {
+        return new JsonParser().parse(json).getAsJsonObject();
     }
 
     private static JsonElement getAsJsonElement(final JsonObject jsonObject, final String memberName) {
@@ -105,6 +106,21 @@ public class CommonUtils {
             return totalBalanceInPercent;
         }
         return totalBalanceInPercent.divide(BigDecimal.valueOf(periodLengthInMonths), RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(12));
+    }
+
+    public static BigDecimal parse(final String numberString, final NumberFormat numberFormat) throws ParseException {
+        return new BigDecimal(numberFormat.parse(numberString).toString());
+    }
+
+    public static boolean containsWordMaxOneLetterDifference(final String aWord, final String string) {
+        final String[] words = string.split(" ");
+        for (String word : words) {
+            int distance = StringUtils.getLevenshteinDistance(aWord, word);
+            if (distance <= 1) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

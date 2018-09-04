@@ -18,6 +18,8 @@
     <poi.version>3.17</poi.version>
     <ch.qos.logback.version>1.2.3</ch.qos.logback.version>
     <lgooddatepicker.version>10.3.1</lgooddatepicker.version>
+    <org.apache.httpcomponents.version>4.5.2</org.apache.httpcomponents.version>
+    <jsoup.version>1.11.3</jsoup.version>
     <junit.version>4.12</junit.version>
   </properties>
 
@@ -56,6 +58,16 @@
       <groupId>com.github.lgooddatepicker</groupId>
       <artifactId>LGoodDatePicker</artifactId>
       <version>${lgooddatepicker.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>${org.apache.httpcomponents.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>${jsoup.version}</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

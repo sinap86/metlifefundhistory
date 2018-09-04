@@ -18,8 +18,6 @@ public class RateSettingsPanel extends JPanel {
         super(new GridBagLayout());
 
         chkUseOnlineRates = new JCheckBox("Online árfolyamok aktív alapoknál");
-        // TODO enable when online rate provider implemented
-        chkUseOnlineRates.setEnabled(false);
         addComponent(chkUseOnlineRates, this, 0, 0, 3);
 
         final JLabel lblRateFile = addLabel("Árfolyamok betöltése innen:", this, 1, 0);

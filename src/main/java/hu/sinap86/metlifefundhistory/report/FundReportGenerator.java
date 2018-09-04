@@ -52,7 +52,8 @@ public class FundReportGenerator {
     }
 
     private Result persist(final Map<String, FundHistory> fundHistoryByName) throws IOException {
-        final RateProvider rateProvider = settings.isUseOnlineRates() ? new OnlineRateProvider() : new FileRateProvider(settings.getRateFile());
+        // TODO get params from fundHistoryByName
+        final RateProvider rateProvider = settings.isUseOnlineRates() ? new OnlineRateProvider("653", "HUF") : new FileRateProvider(settings.getRateFile());
         final File resultFile = new File(settings.getTransactionHistoryDirectory(), Constants.REPORT_FILE_NAME);
 
         final SpreadsheetTransactionHistoryPersister persister = new SpreadsheetTransactionHistoryPersister(resultFile, rateProvider);

@@ -2,6 +2,7 @@ package hu.sinap86.metlifefundhistory.util;
 
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
+import hu.sinap86.metlifefundhistory.config.Constants;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -10,7 +11,6 @@ import java.awt.*;
 import java.io.File;
 import java.time.DayOfWeek;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 
 public class UIUtils {
@@ -90,7 +90,7 @@ public class UIUtils {
     }
 
     public static DatePicker createDatePicker() {
-        final DatePickerSettings dateSettings = new DatePickerSettings(new Locale("hu"));
+        final DatePickerSettings dateSettings = new DatePickerSettings(Constants.LOCALE_HU);
         dateSettings.setFirstDayOfWeek(DayOfWeek.MONDAY);
         dateSettings.setTranslationToday("Ma");
         dateSettings.setTranslationClear("Töröl");
