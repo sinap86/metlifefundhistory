@@ -3,6 +3,7 @@ package hu.sinap86.metlifefundhistory.util;
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
 import hu.sinap86.metlifefundhistory.config.Constants;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -13,6 +14,7 @@ import java.time.DayOfWeek;
 import java.util.HashSet;
 import java.util.Set;
 
+@Slf4j
 public class UIUtils {
 
     public static final FileNameExtensionFilter XML_FILE_NAME_FILTER = new FileNameExtensionFilter(
@@ -106,5 +108,12 @@ public class UIUtils {
         container.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS, newKeys);
     }
 
+    public static void setSystemLookAndFeel() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            log.error("Cannot set native look and feel:", e);
+        }
+    }
 
 }
