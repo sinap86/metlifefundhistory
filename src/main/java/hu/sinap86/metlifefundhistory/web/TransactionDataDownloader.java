@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.exception.TransactionDataDownloadException;
+import hu.sinap86.metlifefundhistory.util.CommonUtils;
+
 import lombok.extern.slf4j.Slf4j;
 
 import javax.swing.*;
@@ -23,6 +25,8 @@ public class TransactionDataDownloader extends SwingWorker<Void, Void> {
     private TransactionHistoryQuerySettings querySettings;
 
     public TransactionDataDownloader(final MetLifeWebSessionManager webSessionManager, final TransactionHistoryQuerySettings querySettings) {
+        CommonUtils.checkNotNull(webSessionManager, "webSessionManager");
+        CommonUtils.checkNotNull(querySettings, "querySettings");
         this.webSessionManager = webSessionManager;
         this.querySettings = querySettings;
     }

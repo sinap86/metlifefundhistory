@@ -1,5 +1,7 @@
 package hu.sinap86.metlifefundhistory.report.rate;
 
+import hu.sinap86.metlifefundhistory.util.CommonUtils;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -15,9 +17,7 @@ public class FileRateProvider implements RateProvider {
     private final Properties rateProperties = new Properties();
 
     public FileRateProvider(final File ratesFile) {
-        if (ratesFile == null) {
-            throw new NullPointerException();
-        }
+        CommonUtils.checkNotNull(ratesFile, "ratesFile");
         if (!ratesFile.canRead()) {
             throw new IllegalArgumentException(String.format("Exchange rates file (%s) not readable!", ratesFile.getAbsolutePath()));
         }

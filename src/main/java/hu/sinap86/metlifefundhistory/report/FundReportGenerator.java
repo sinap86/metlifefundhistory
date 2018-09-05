@@ -8,6 +8,7 @@ import hu.sinap86.metlifefundhistory.report.persist.SpreadsheetTransactionHistor
 import hu.sinap86.metlifefundhistory.report.rate.FileRateProvider;
 import hu.sinap86.metlifefundhistory.report.rate.OnlineRateProvider;
 import hu.sinap86.metlifefundhistory.report.rate.RateProvider;
+import hu.sinap86.metlifefundhistory.util.CommonUtils;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -40,9 +41,7 @@ public class FundReportGenerator extends SwingWorker<Void, Void> {
     private ReportGeneratorSettings settings;
 
     public FundReportGenerator(final ReportGeneratorSettings settings) {
-        if (settings == null) {
-            throw new IllegalStateException("No settings given!");
-        }
+        CommonUtils.checkNotNull(settings, "settings");
         this.settings = settings;
     }
 

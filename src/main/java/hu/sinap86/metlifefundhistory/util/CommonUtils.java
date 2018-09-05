@@ -123,4 +123,9 @@ public class CommonUtils {
         return false;
     }
 
+    public static void checkNotNull(final Object object, final String argName) {
+        if (object == null) {
+            throw new IllegalArgumentException(String.format("Argument '%s' must not be null!", argName));
+        }
+    }
 }

@@ -37,9 +37,7 @@ public class TransactionDataParser {
 
     public TransactionDataParser(final JsonObject rootObject, final String transactionArrayTagName, final String numberOfInitialUnitsTagName, final String numberOfAccumulationUnitsTagName,
                                  final String rateTagName, final String priceDateTagName) {
-        if (rootObject == null) {
-            throw new NullPointerException();
-        }
+        CommonUtils.checkNotNull(rootObject, "rootObject");
         this.rootObject = rootObject;
         this.transactionArrayTagName = transactionArrayTagName;
         this.numberOfInitialUnitsTagName = numberOfInitialUnitsTagName;

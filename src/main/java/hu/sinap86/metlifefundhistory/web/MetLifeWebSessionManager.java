@@ -79,9 +79,8 @@ public class MetLifeWebSessionManager {
     }
 
     public List<FundRate> getRates(final String contractTypeNumber, final String currency, final LocalDate date) throws IOException {
-        if (date == null) {
-            throw new IllegalArgumentException("date must not be null");
-        }
+        CommonUtils.checkNotNull(date, "date");
+
         makeAcceptCookiesRequestIfNecessary();
 
         final String paddedContractTypeNumber = StringUtils.leftPad(contractTypeNumber, 4, '0');

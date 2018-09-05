@@ -20,12 +20,9 @@ public class OnlineRateProvider implements RateProvider {
     private final MetLifeWebSessionManager webSessionManager;
 
     public OnlineRateProvider(final String contractTypeNumber, final String currency) throws IOException {
-        if (StringUtils.isEmpty(contractTypeNumber)) {
-            throw new IllegalArgumentException("contractTypeNumber must not be null");
-        }
-        if (StringUtils.isEmpty(currency)) {
-            throw new IllegalArgumentException("currency must not be null");
-        }
+        CommonUtils.checkNotNull(contractTypeNumber, "contractTypeNumber");
+        CommonUtils.checkNotNull(currency, "currency");
+
         final LocalDate now = LocalDate.now();
         rateDateString = now.format(Constants.DATE_FORMATTER);
 
