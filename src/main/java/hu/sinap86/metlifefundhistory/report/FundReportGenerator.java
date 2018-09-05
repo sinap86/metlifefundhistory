@@ -19,8 +19,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.*;
+
 @Slf4j
-public class FundReportGenerator {
+public class FundReportGenerator extends SwingWorker<Void, Void> {
+
+    public static final int TRANSACTION_LIST_PARSED_PROGRESS = 20;
+    public static final int RATES_PROVIDED_PROGRESS = 50;
+    private Result result;
 
     @Builder
     @Getter
@@ -40,20 +46,47 @@ public class FundReportGenerator {
         this.settings = settings;
     }
 
-    public Result generate() throws IOException {
+    @Override
+    protected Void doInBackground() throws Exception {
+        generate();
+        return null;
+    }
+
+    private void generate() throws IOException {
+        log.debug("report generation started.");
 
         final Map<String, FundHistory> fundHistoryByName = new TransactionHistoryProcessor().process(settings.getTransactionHistoryDirectory());
         if (fundHistoryByName.isEmpty()) {
+            setProgress(100);
             log.warn("No fund history elements were parsed.");
-            return null;
+            return;
+        }
+        log.debug("Fund history elements parsed.");
+
+        if (isCancelled()) {
+            log.debug("report generation cancelled.");
+            return;
         }
 
-        return persist(fundHistoryByName);
+        setProgress(TRANSACTION_LIST_PARSED_PROGRESS);
+
+        this.result = persist(fundHistoryByName);
+        log.debug("report generation finished.");
+        setProgress(100);
     }
 
     private Result persist(final Map<String, FundHistory> fundHistoryByName) throws IOException {
         // TODO get params from fundHistoryByName
-        final RateProvider rateProvider = settings.isUseOnlineRates() ? new OnlineRateProvider("653", "HUF") : new FileRateProvider(settings.getRateFile());
+        final RateProvider rateProvider = settings.isUseOnlineRates() ? new OnlineRateProvider("653", "HUF") :
+                                          new FileRateProvider(settings.getRateFile());
+        log.debug("Rates provided for active funds.");
+
+        if (isCancelled()) {
+            log.debug("report generation cancelled.");
+            return null;
+        }
+        setProgress(RATES_PROVIDED_PROGRESS);
+
         final File resultFile = new File(settings.getTransactionHistoryDirectory(), Constants.REPORT_FILE_NAME);
 
         final SpreadsheetTransactionHistoryPersister persister = new SpreadsheetTransactionHistoryPersister(resultFile, rateProvider);
@@ -64,5 +97,9 @@ public class FundReportGenerator {
                 .reportFile(resultFile)
                 .warnings(warnings)
                 .build();
+    }
+
+    public Result getResult() {
+        return result;
     }
 }

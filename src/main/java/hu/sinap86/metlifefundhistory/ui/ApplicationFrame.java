@@ -8,6 +8,7 @@ import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.config.ReportGeneratorSettings;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.report.FundReportGenerator;
+import hu.sinap86.metlifefundhistory.ui.component.IndeterminateProgressMonitor;
 import hu.sinap86.metlifefundhistory.ui.component.LoginInfoPanel;
 import hu.sinap86.metlifefundhistory.ui.dialog.LoginDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.ReportGeneratorSettingsDialog;
@@ -199,6 +200,11 @@ public class ApplicationFrame extends JFrame {
             final TransactionDataDownloader downloader = new TransactionDataDownloader(webSessionManager, querySettings);
 
             final PropertyChangeListener downloadProgressListener = evt -> {
+                if (progressMonitor.isCanceled()) {
+                    downloader.cancel(true);
+                    return;
+                }
+
                 final String propertyName = evt.getPropertyName();
                 final Object newValue = evt.getNewValue();
                 if ("progress".equals(propertyName)) {
@@ -208,9 +214,6 @@ public class ApplicationFrame extends JFrame {
                 }
                 if ("state".equals(propertyName) && SwingWorker.StateValue.DONE.equals(newValue)) {
                     generateReport(querySettings);
-                }
-                if (progressMonitor.isCanceled()) {
-                    downloader.cancel(true);
                 }
             };
 
@@ -238,17 +241,46 @@ public class ApplicationFrame extends JFrame {
 
     private void generateReport(final ReportGeneratorSettings settings) {
         try {
-            final FundReportGenerator reportGenerator = new FundReportGenerator(settings);
-            final FundReportGenerator.Result generatorResult = reportGenerator.generate();
+            UIManager.put("ProgressMonitor.progressText", "Riport generálás");
+            UIManager.put("OptionPane.cancelButtonText", "Mégse");
+            final IndeterminateProgressMonitor progressMonitor = new IndeterminateProgressMonitor(this, null,
+                                                                                                  "Tranzakciós adatok feldolgozása . . .");
 
-            showReportGeneratorResult(generatorResult);
-        } catch (IOException e) {
+            final FundReportGenerator reportGenerator = new FundReportGenerator(settings);
+
+            final PropertyChangeListener generatorProgressListener = evt -> {
+                if (progressMonitor.isCanceled()) {
+                    reportGenerator.cancel(true);
+                    return;
+                }
+
+                final String propertyName = evt.getPropertyName();
+                final Object newValue = evt.getNewValue();
+                if ("progress".equals(propertyName)) {
+                    final int progress = (Integer) newValue;
+                    progressMonitor.setProgress(progress);
+                    if (progress == FundReportGenerator.TRANSACTION_LIST_PARSED_PROGRESS) {
+                        progressMonitor.setNote(settings.isUseOnlineRates() ? "Online árfolyamok letöltése  . . ."
+                                                                            : "Árfolyam fájl feldolgozása  . . .");
+                    }
+                    if (progress == FundReportGenerator.RATES_PROVIDED_PROGRESS) {
+                        progressMonitor.setNote("Riport generálás . . .");
+                    }
+                }
+                if ("state".equals(propertyName) && SwingWorker.StateValue.DONE.equals(newValue)) {
+                    showReportGeneratorResult(reportGenerator.getResult());
+                }
+            };
+
+            reportGenerator.addPropertyChangeListener(generatorProgressListener);
+            reportGenerator.execute();
+        } catch (Exception e) {
             log.error("Cannot generate fund report:", e);
             showErrorDialog(this, "Hiba történt riport generálás során!");
         }
     }
 
-    private void showReportGeneratorResult(final FundReportGenerator.Result generatorResult) throws IOException {
+    private void showReportGeneratorResult(final FundReportGenerator.Result generatorResult) {
         if (generatorResult == null || generatorResult.getReportFile() == null) {
             showErrorDialog(this, "Hiba történt riport generálás során!");
             return;
@@ -294,7 +326,11 @@ public class ApplicationFrame extends JFrame {
                                                         null);
 
         if (result == JOptionPane.YES_OPTION && desktopSupported) {
-            Desktop.getDesktop().open(reportFile);
+            try {
+                Desktop.getDesktop().open(reportFile);
+            } catch (IOException e) {
+                log.error("Cannot open report file:", e);
+            }
         }
     }
 
