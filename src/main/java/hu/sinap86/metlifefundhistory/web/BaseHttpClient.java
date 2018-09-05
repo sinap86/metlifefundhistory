@@ -1,12 +1,19 @@
 package hu.sinap86.metlifefundhistory.web;
 
-import com.google.gson.JsonObject;
 import hu.sinap86.metlifefundhistory.config.ApplicationConfig;
 import hu.sinap86.metlifefundhistory.util.CommonUtils;
+
+import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.http.*;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.ProtocolException;
 import org.apache.http.client.RedirectStrategy;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -23,12 +30,13 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 
-import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.List;
+
+import javax.net.ssl.SSLContext;
 
 @Slf4j
 public class BaseHttpClient {
@@ -105,7 +113,7 @@ public class BaseHttpClient {
 
     public JsonObject executeGetRequestForJsonReply(final String requestUrl, final String... requestParams) throws IOException {
         final HttpUriRequest request = ArrayUtils.isEmpty(requestParams) ?
-                new HttpGet(requestUrl) : new HttpGet(String.format(requestUrl, requestParams));
+                                       new HttpGet(requestUrl) : new HttpGet(String.format(requestUrl, requestParams));
         final String responseString = execute(request);
         return CommonUtils.getAsJsonObject(responseString);
     }
@@ -143,20 +151,22 @@ public class BaseHttpClient {
     }
 
     private void dumpResponse(final String responseString) {
-        // TODO runtime arg to check dump required
-        log.debug("=== RAW RESPONSE ===");
-        log.debug(responseString);
-        log.debug("=== RAW RESPONSE ===");
+        if (Boolean.parseBoolean(System.getProperty("dump.response"))) {
+            log.debug("=== RAW RESPONSE START ===");
+            log.debug(responseString);
+            log.debug("=== RAW RESPONSE END ===");
+        }
     }
 
     private void dumpCookies() {
-        // TODO runtime arg to check dump required
-        final List<Cookie> cookies = cookieStore.getCookies();
-        log.debug("=== COOKIES ===");
-        for (int i = 0; i < cookies.size(); i++) {
-            log.debug("\t" + cookies.get(i).toString());
+        if (Boolean.parseBoolean(System.getProperty("dump.cookies"))) {
+            final List<Cookie> cookies = cookieStore.getCookies();
+            log.debug("=== COOKIES START ===");
+            for (int i = 0; i < cookies.size(); i++) {
+                log.debug("\t" + cookies.get(i).toString());
+            }
+            log.debug("=== COOKIES END ===");
         }
-        log.debug("=== COOKIES ===");
     }
 
 }
