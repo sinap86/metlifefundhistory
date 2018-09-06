@@ -101,6 +101,9 @@ public class CommonUtils {
     }
 
     public static BigDecimal calculateYearlyAverageInterestRate(final BigDecimal totalBalance, final FundHistory history) {
+        if (totalBalance == null) {
+            return null;
+        }
         // total balance for the whole period
         final BigDecimal sumAmountOfPositiveTransactions = history.getHistoryElements().stream()
                 .filter(historyElement -> historyElement.getSumAmount().compareTo(BigDecimal.ZERO) > 0)

@@ -88,6 +88,7 @@ public class FundReportGenerator extends SwingWorker<Void, Void> {
         }
         setProgress(RATES_PROVIDED_PROGRESS);
 
+        // TODO ha van már ilyen fájl akkor esetleg legyen más a fájlnév
         final File resultFile = new File(settings.getTransactionHistoryDirectory(), Constants.REPORT_FILE_NAME);
 
         final SpreadsheetTransactionHistoryPersister persister = new SpreadsheetTransactionHistoryPersister(resultFile, rateProvider);

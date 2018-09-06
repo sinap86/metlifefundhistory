@@ -8,4 +8,6 @@ public interface RateProvider {
 
     BigDecimal getExchangeRate(final String fundName);
 
+    boolean isRatesLoadedSuccessfully();
+
 }

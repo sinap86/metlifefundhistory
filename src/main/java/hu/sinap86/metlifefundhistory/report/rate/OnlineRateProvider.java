@@ -6,6 +6,7 @@ import hu.sinap86.metlifefundhistory.util.CommonUtils;
 import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -19,6 +20,7 @@ public class OnlineRateProvider implements RateProvider {
     private final String rateDateString;
 
     private final MetLifeWebSessionManager webSessionManager;
+    private boolean ratesLoadedSuccessfully;
 
     public OnlineRateProvider(final Contract contract) throws IOException {
         CommonUtils.checkNotNull(contract.getType(), "contractTypeNumber");
@@ -29,6 +31,8 @@ public class OnlineRateProvider implements RateProvider {
 
         webSessionManager = new MetLifeWebSessionManager();
         fundRates = webSessionManager.getRates(contract, now);
+        ratesLoadedSuccessfully = CollectionUtils.isNotEmpty(fundRates);
+        // TODO ha nincsenek árfolyamok, akkor kérjük le az előző napra
     }
 
     @Override
@@ -38,6 +42,9 @@ public class OnlineRateProvider implements RateProvider {
 
     @Override
     public BigDecimal getExchangeRate(final String fundName) {
+        if (CollectionUtils.isEmpty(fundRates)) {
+            return null;
+        }
         /**
          * Check if all words in fundName is contained by fundRate's key.
          * One letter difference allowed.
@@ -61,6 +68,11 @@ public class OnlineRateProvider implements RateProvider {
             }
         }
         return null;
+    }
+
+    @Override
+    public boolean isRatesLoadedSuccessfully() {
+        return ratesLoadedSuccessfully;
     }
 
 }

@@ -15,6 +15,7 @@ import java.util.Properties;
 public class FileRateProvider implements RateProvider {
 
     private final Properties rateProperties = new Properties();
+    private boolean ratesLoadedSuccessfully;
 
     public FileRateProvider(final File ratesFile) {
         CommonUtils.checkNotNull(ratesFile, "ratesFile");
@@ -24,6 +25,7 @@ public class FileRateProvider implements RateProvider {
 
         try {
             rateProperties.loadFromXML(new FileInputStream(ratesFile));
+            ratesLoadedSuccessfully = true;
             log.debug("Using exchange rates for active funds from file: {}", ratesFile.getAbsolutePath());
         } catch (IOException e) {
             log.error("Cannot load exchange rates from file: " + ratesFile.getAbsolutePath(), e);
@@ -42,5 +44,10 @@ public class FileRateProvider implements RateProvider {
             return new BigDecimal(fundRate);
         }
         return null;
+    }
+
+    @Override
+    public boolean isRatesLoadedSuccessfully() {
+        return ratesLoadedSuccessfully;
     }
 }

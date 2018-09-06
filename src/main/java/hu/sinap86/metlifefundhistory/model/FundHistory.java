@@ -1,5 +1,7 @@
 package hu.sinap86.metlifefundhistory.model;
 
+import hu.sinap86.metlifefundhistory.util.CommonUtils;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,6 +42,7 @@ public class FundHistory {
     }
 
     public BigDecimal getTotalBalance(final BigDecimal rate) {
+        CommonUtils.checkNotNull(rate, "rate");
         final BigDecimal amountSum = historyElements.stream().map(HistoryElement::getSumAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         return getTotalUnits().multiply(rate).subtract(amountSum);
     }

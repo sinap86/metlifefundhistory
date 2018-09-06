@@ -43,7 +43,7 @@ public class SpreadsheetTransactionHistoryPersister {
 
     @Data
     @Builder
-    static class FundHistorySummary {
+    private static class FundHistorySummary {
 
         private String fundName;
         private BigDecimal depositSum;
@@ -84,10 +84,21 @@ public class SpreadsheetTransactionHistoryPersister {
 
     private void initSummarySheet() {
         summarySheet = workbook.createSheet("Összesen");
-        setColumnWidths(summarySheet, 30, 20, 20, 20, 20, 20, 30);
+
+        final int[] columnWidths;
+        final String[] headerTexts;
+        if (rateProvider.isRatesLoadedSuccessfully()) {
+            columnWidths = new int[]{ 30, 20, 20, 20, 20, 20, 30 };
+            headerTexts = new String[]{ "Eszközalap", "Összes befizetés", "Összes levonás", "Aktuális érték", "Mérleg", "Átlagos éves kamat", StringUtils.EMPTY };
+        } else {
+            columnWidths = new int[]{ 30, 20, 20, 20, 20, 30 };
+            headerTexts = new String[]{ "Eszközalap", "Összes befizetés", "Összes levonás", "Mérleg", "Átlagos éves kamat", StringUtils.EMPTY };
+        }
+
+        setColumnWidths(summarySheet, columnWidths);
 
         final XSSFRow row = nextRow(summarySheet, 0);
-        writeCells(row, sheetHeaderCellStyle, "Eszközalap", "Összes befizetés", "Összes levonás", "Aktuális érték", "Mérleg", "Átlagos éves kamat", StringUtils.EMPTY);
+        writeCells(row, sheetHeaderCellStyle, (Object[]) headerTexts);
 
         summarySheet.createFreezePane(0, 1);
     }
@@ -102,7 +113,7 @@ public class SpreadsheetTransactionHistoryPersister {
         final List<FundHistorySummary> fundHistorySummaryList = Lists.newArrayList();
 
         final List<FundHistory> fundHistories = contract.getFundHistories();
-        Collections.sort(fundHistories, Comparator.comparing(FundHistory::getFundName));
+        fundHistories.sort(Comparator.comparing(FundHistory::getFundName));
         fundHistories.forEach(fundHistory -> {
             final XSSFSheet fundSheet = workbook.createSheet(fundHistory.getFundName());
             createFundSheetHeader(fundSheet);
@@ -156,9 +167,9 @@ public class SpreadsheetTransactionHistoryPersister {
             totalBalance = history.getTotalBalance();
             currentValue = null;
         } else {
-            rate = getExchangeRateOrZero(fundName);
-            totalBalance = history.getTotalBalance(rate);
-            currentValue = totalUnits.multiply(rate);
+            rate = getExchangeRate(fundName);
+            totalBalance = rate != null ? history.getTotalBalance(rate) : null;
+            currentValue = rate != null ? totalUnits.multiply(rate) : null;
         }
         final BigDecimal averageInterestRate = CommonUtils.calculateYearlyAverageInterestRate(totalBalance, history);
 
@@ -179,17 +190,20 @@ public class SpreadsheetTransactionHistoryPersister {
                 .build();
     }
 
-    private BigDecimal getExchangeRateOrZero(final String fundName) {
-        BigDecimal fundRate = rateProvider.getExchangeRate(fundName);
+    private BigDecimal getExchangeRate(final String fundName) {
+        final BigDecimal fundRate = rateProvider.getExchangeRate(fundName);
         if (fundRate == null) {
-            fundRate = BigDecimal.ZERO;
-            log.warn("No exchange rate for '{}' fund, using 0 as value.", fundName);
+            log.warn("No exchange rate for '{}' fund!.", fundName);
             warnings.add(String.format("Nem található árfolyam a(z) '%s' alaphoz!", fundName));
         }
         return fundRate;
     }
 
     private void createFundSheetTotalRows(final XSSFSheet sheet, final FundHistorySummary fundHistorySummary) {
+        if (fundHistorySummary.totalBalance == null || fundHistorySummary.averageInterestRate == null) {
+            return;
+        }
+
         final Color color = getColor(fundHistorySummary.totalBalance);
         final CellStyle boldBordered = createBoldBorderedCellStyle();
 
@@ -218,11 +232,25 @@ public class SpreadsheetTransactionHistoryPersister {
         createCell(row, fundHistorySummary.fundName, cellStyleText);
         createCell(row, fundHistorySummary.depositSum, cellStyleAmount);
         createCell(row, fundHistorySummary.reductionSum, cellStyleAmount);
-        createCell(row, fundHistorySummary.currentValue, cellStyleAmount);
-        createCell(row, fundHistorySummary.totalBalance, createCellStyle(CELL_STYLE_AMOUNT, color, notSold));
-        createCell(row, fundHistorySummary.averageInterestRate, createCellStyle(CELL_STYLE_PERCENT, color, notSold));
+
+        if (notSold && !rateProvider.isRatesLoadedSuccessfully()) {
+            // no rates are available for active funds
+            createCell(row, StringUtils.EMPTY, cellStyleText);
+            createCell(row, StringUtils.EMPTY, cellStyleText);
+        } else {
+            // fund was sold or (active and rates are available)
+            if (rateProvider.isRatesLoadedSuccessfully()) {
+                createCell(row, fundHistorySummary.currentValue, cellStyleAmount);
+            }
+            createCell(row, fundHistorySummary.totalBalance, createCellStyle(CELL_STYLE_AMOUNT, color, notSold));
+            createCell(row, fundHistorySummary.averageInterestRate, createCellStyle(CELL_STYLE_PERCENT, color, notSold));
+        }
         if (notSold) {
-            createCell(row, String.format("%s-i állapot szerint", rateProvider.getRateDate()), cellStyleText);
+            if (rateProvider.isRatesLoadedSuccessfully() && fundHistorySummary.currentValue != null) {
+                createCell(row, String.format("%s-i állapot szerint", rateProvider.getRateDate()), cellStyleText);
+            } else {
+                createCell(row, "Hiányzó árfolyam", cellStyleText);
+            }
         }
     }
 
@@ -232,21 +260,24 @@ public class SpreadsheetTransactionHistoryPersister {
 
         final XSSFRow row = nextRow(summarySheet);
         createCell(row, "Össezsen", boldBordered);
-        createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getDepositSum), boldBorderedAmount);
-        createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getReductionSum), boldBorderedAmount);
-        createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getCurrentValue), boldBorderedAmount);
-        createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getTotalBalance), boldBorderedAmount);
+        createCell(row, sumOrNull(fundHistorySummaryList, FundHistorySummary::getDepositSum), boldBorderedAmount);
+        createCell(row, sumOrNull(fundHistorySummaryList, FundHistorySummary::getReductionSum), boldBorderedAmount);
+        if (rateProvider.isRatesLoadedSuccessfully()) {
+            createCell(row, sumOrNull(fundHistorySummaryList, FundHistorySummary::getCurrentValue), boldBorderedAmount);
+        }
+        createCell(row, sumOrNull(fundHistorySummaryList, FundHistorySummary::getTotalBalance), boldBorderedAmount);
         createCell(row, null, boldBordered);
 
     }
 
-    private BigDecimal sum(final List<FundHistorySummary> fundHistorySummaryList, final Function<FundHistorySummary, BigDecimal> function) {
+    private BigDecimal sumOrNull(final List<FundHistorySummary> fundHistorySummaryList, final Function<FundHistorySummary, BigDecimal> function) {
         BigDecimal sum = BigDecimal.ZERO;
         for (FundHistorySummary summary : fundHistorySummaryList) {
             final BigDecimal result = function.apply(summary);
-            if (result != null) {
-                sum = sum.add(result);
+            if (result == null) {
+                return null;
             }
+            sum = sum.add(result);
         }
         return sum;
     }
@@ -259,6 +290,9 @@ public class SpreadsheetTransactionHistoryPersister {
     }
 
     private Color getColor(final BigDecimal amountSum) {
+        if (amountSum == null) {
+            return Color.BLACK;
+        }
         final Color color;
         final int compare = amountSum.compareTo(BigDecimal.ZERO);
         if (compare < 0) {
