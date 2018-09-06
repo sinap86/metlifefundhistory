@@ -1,10 +1,11 @@
 package hu.sinap86.metlifefundhistory.report.rate;
 
 import hu.sinap86.metlifefundhistory.config.Constants;
+import hu.sinap86.metlifefundhistory.model.Contract;
 import hu.sinap86.metlifefundhistory.util.CommonUtils;
 import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
+
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -19,15 +20,15 @@ public class OnlineRateProvider implements RateProvider {
 
     private final MetLifeWebSessionManager webSessionManager;
 
-    public OnlineRateProvider(final String contractTypeNumber, final String currency) throws IOException {
-        CommonUtils.checkNotNull(contractTypeNumber, "contractTypeNumber");
-        CommonUtils.checkNotNull(currency, "currency");
+    public OnlineRateProvider(final Contract contract) throws IOException {
+        CommonUtils.checkNotNull(contract.getType(), "contractTypeNumber");
+        CommonUtils.checkNotNull(contract.getCurrency(), "currency");
 
         final LocalDate now = LocalDate.now();
         rateDateString = now.format(Constants.DATE_FORMATTER);
 
         webSessionManager = new MetLifeWebSessionManager();
-        fundRates = webSessionManager.getRates(contractTypeNumber, currency, now);
+        fundRates = webSessionManager.getRates(contract, now);
     }
 
     @Override

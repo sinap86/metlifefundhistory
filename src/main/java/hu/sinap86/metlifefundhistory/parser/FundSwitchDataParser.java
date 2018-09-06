@@ -3,6 +3,7 @@ package hu.sinap86.metlifefundhistory.parser;
 import static hu.sinap86.metlifefundhistory.util.CommonUtils.getBigDecimal;
 import static hu.sinap86.metlifefundhistory.util.CommonUtils.getString;
 
+import hu.sinap86.metlifefundhistory.model.Contract;
 import hu.sinap86.metlifefundhistory.model.FundHistory;
 import hu.sinap86.metlifefundhistory.model.HistoryElement;
 import hu.sinap86.metlifefundhistory.util.CommonUtils;
@@ -12,8 +13,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class FundSwitchDataParser extends TransactionDataParser {
@@ -23,14 +22,15 @@ public class FundSwitchDataParser extends TransactionDataParser {
     }
 
     @Override
-    public Collection<FundHistory> parse() {
-        final List<FundHistory> results = new ArrayList<>();
-        processTransactionDataArray(results, "fundSwitchSources");
-        processTransactionDataArray(results, "fundSwitchTargets");
-        return results;
+    public Contract parse() {
+        final Contract contract = parseContract(rootObject);
+        final List<FundHistory> fundHistories = contract.getFundHistories();
+        processTransactionDataArray(fundHistories, "fundSwitchSources");
+        processTransactionDataArray(fundHistories, "fundSwitchTargets");
+        return contract;
     }
 
-    private void processTransactionDataArray(final List<FundHistory> results, final String transactionArrayTagName) {
+    private void processTransactionDataArray(final List<FundHistory> fundHistories, final String transactionArrayTagName) {
         final String transactionName = getString(rootObject, TRANSACTION_NAME);
         final String transactionCode = getString(rootObject, TRANSACTION_CODE);
         final String transactionDate = getString(rootObject, TRANSACTION_DATE);
@@ -55,7 +55,7 @@ public class FundSwitchDataParser extends TransactionDataParser {
                     .rate(rate)
                     .priceDate(priceDate)
                     .build();
-            CommonUtils.add(results, fundName, fundCode, historyElement);
+            CommonUtils.add(fundHistories, fundName, fundCode, historyElement);
         }
     }
 }

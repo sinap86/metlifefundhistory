@@ -1,10 +1,12 @@
 package hu.sinap86.metlifefundhistory.web;
 
-import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
 import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
+import hu.sinap86.metlifefundhistory.model.Contract;
 import hu.sinap86.metlifefundhistory.util.CommonUtils;
+
+import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,21 +46,6 @@ public class MetLifeWebSessionManager {
 
     @Builder
     @Getter
-    public static class Contract {
-
-        private String id;
-        private String name;
-        private String contractTypeNumber;
-        private String contractTypeName;
-        private String currency;
-        private double actualValue;
-        private double surrenderValue;
-        private double dueAmount;
-        private String paidToDate;
-    }
-
-    @Builder
-    @Getter
     public static class FundRate {
 
         private String fundName;
@@ -78,12 +65,12 @@ public class MetLifeWebSessionManager {
         return httpClient;
     }
 
-    public List<FundRate> getRates(final String contractTypeNumber, final String currency, final LocalDate date) throws IOException {
+    public List<FundRate> getRates(final Contract contract, final LocalDate date) throws IOException {
         CommonUtils.checkNotNull(date, "date");
 
         makeAcceptCookiesRequestIfNecessary();
 
-        final String paddedContractTypeNumber = StringUtils.leftPad(contractTypeNumber, 4, '0');
+        final String paddedContractTypeNumber = StringUtils.leftPad(contract.getType(), 4, '0');
         final String dateStr = date.format(Constants.DATE_FORMATTER);
 
         final HttpUriRequest rateRequest = RequestBuilder.get()
@@ -93,7 +80,7 @@ public class MetLifeWebSessionManager {
                 .addParameter("showFunds", "false")
                 .addParameter("compareMode", "compareContract")
                 .addParameter("mainComponentCode", paddedContractTypeNumber)
-                .addParameter("currency", currency)
+                .addParameter("currency", contract.getCurrency())
                 .addParameter("from", dateStr)
                 .addParameter("yahoo_calendarInput1-yearselect", String.valueOf(date.getYear()))
                 .addParameter("to", dateStr)
@@ -190,12 +177,12 @@ public class MetLifeWebSessionManager {
         final Contract contract = Contract.builder()
                 .id("123456")
                 .name("Presztízs")
-                .contractTypeNumber("653")
-                .contractTypeName("befektetéshez kötött életbiztosítás")
+                .type("653")
+                .typeName("befektetéshez kötött életbiztosítás")
                 .currency("HUF")
-                .actualValue(3608514.8118382804)
-                .surrenderValue(3241519.36)
-                .dueAmount(0)
+                .actualValue(new BigDecimal("3608514.8118382804"))
+                .surrenderValue(new BigDecimal("3241519.36"))
+                .dueAmount(BigDecimal.ZERO)
                 .paidToDate("2018-12-28")
                 .build();
         return Lists.newArrayList(contract

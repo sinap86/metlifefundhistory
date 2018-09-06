@@ -5,6 +5,7 @@ import static hu.sinap86.metlifefundhistory.util.XLSUtils.nextRow;
 import static hu.sinap86.metlifefundhistory.util.XLSUtils.setColumnWidths;
 import static hu.sinap86.metlifefundhistory.util.XLSUtils.writeCells;
 
+import hu.sinap86.metlifefundhistory.model.Contract;
 import hu.sinap86.metlifefundhistory.model.FundHistory;
 import hu.sinap86.metlifefundhistory.model.HistoryElement;
 import hu.sinap86.metlifefundhistory.report.rate.RateProvider;
@@ -33,8 +34,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 @Slf4j
@@ -91,7 +92,8 @@ public class SpreadsheetTransactionHistoryPersister {
         summarySheet.createFreezePane(0, 1);
     }
 
-    public List<String> persist(final Map<String, FundHistory> fundHistoryByName) throws IOException {
+    public List<String> persist(final Contract contract) throws IOException {
+        CommonUtils.checkNotNull(contract, "contract");
         warnings.clear();
 
         final CellStyle unitStyle = createCellStyle(CELL_STYLE_UNIT);
@@ -99,8 +101,10 @@ public class SpreadsheetTransactionHistoryPersister {
         final CellStyle amountStyle = createCellStyle(CELL_STYLE_AMOUNT);
         final List<FundHistorySummary> fundHistorySummaryList = Lists.newArrayList();
 
-        fundHistoryByName.forEach((fundName, fundHistory) -> {
-            final XSSFSheet fundSheet = workbook.createSheet(fundName);
+        final List<FundHistory> fundHistories = contract.getFundHistories();
+        Collections.sort(fundHistories, Comparator.comparing(FundHistory::getFundName));
+        fundHistories.forEach(fundHistory -> {
+            final XSSFSheet fundSheet = workbook.createSheet(fundHistory.getFundName());
             createFundSheetHeader(fundSheet);
 
             Collections.sort(fundHistory.getHistoryElements());

@@ -3,11 +3,13 @@ package hu.sinap86.metlifefundhistory.ui.component;
 import static hu.sinap86.metlifefundhistory.util.UIUtils.addLabel;
 
 import hu.sinap86.metlifefundhistory.config.Constants;
+import hu.sinap86.metlifefundhistory.model.Contract;
 import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
+import java.math.BigDecimal;
 import java.util.List;
 
 import javax.swing.*;
@@ -50,7 +52,7 @@ public class LoginInfoPanel extends JPanel {
         final JPanel contractsPanel = new JPanel();
         contractsPanel.setLayout(new BoxLayout(contractsPanel, BoxLayout.Y_AXIS));
 
-        final List<MetLifeWebSessionManager.Contract> userContracts = webSessionManager.getUserContracts();
+        final List<Contract> userContracts = webSessionManager.getUserContracts();
         for (int i = 0; i < userContracts.size(); i++) {
             contractsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
             contractsPanel.add(createContractPanel(userContracts.get(i)));
@@ -61,7 +63,7 @@ public class LoginInfoPanel extends JPanel {
         return scrollPane;
     }
 
-    private JPanel createContractPanel(final MetLifeWebSessionManager.Contract contract) {
+    private JPanel createContractPanel(final Contract contract) {
         final String currency = contract.getCurrency();
 
         final JPanel contractPanel = new JPanel(new GridBagLayout());
@@ -73,7 +75,7 @@ public class LoginInfoPanel extends JPanel {
         addLabel(amount(contract.getSurrenderValue(), currency), contractPanel, 1, 1);
 
         addLabel("Díjelmaradás:", contractPanel, 2, 0);
-        addLabel(contract.getDueAmount() == 0 ? "nincs" : amount(contract.getDueAmount(), currency), contractPanel, 2, 1);
+        addLabel(BigDecimal.ZERO.equals(contract.getDueAmount()) ? "nincs" : amount(contract.getDueAmount(), currency), contractPanel, 2, 1);
 
         addLabel("Díjfedezet lejárata:", contractPanel, 3, 0);
         addLabel(contract.getPaidToDate(), contractPanel, 3, 1);
@@ -82,23 +84,23 @@ public class LoginInfoPanel extends JPanel {
         return contractPanel;
     }
 
-    private String getContractName(final MetLifeWebSessionManager.Contract contract) {
+    private String getContractName(final Contract contract) {
         final StringBuilder sb = new StringBuilder();
         sb.append(contract.getId());
         sb.append(" ");
         sb.append(contract.getName());
-        if (StringUtils.isNotEmpty(contract.getContractTypeNumber())) {
+        if (StringUtils.isNotEmpty(contract.getType())) {
             sb.append(" ");
-            sb.append(contract.getContractTypeNumber());
+            sb.append(contract.getType());
         }
-        if (StringUtils.isNotEmpty(contract.getContractTypeName())) {
+        if (StringUtils.isNotEmpty(contract.getTypeName())) {
             sb.append(" ");
-            sb.append(contract.getContractTypeName());
+            sb.append(contract.getTypeName());
         }
         return sb.toString();
     }
 
-    private String amount(final double amount, final String currency) {
-        return String.format("%s %s", Constants.UI_AMOUNT_FORMAT.format(amount), currency);
+    private String amount(final BigDecimal amount, final String currency) {
+        return amount == null ? StringUtils.EMPTY : String.format("%s %s", Constants.UI_AMOUNT_FORMAT.format(amount), currency);
     }
 }

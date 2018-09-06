@@ -2,7 +2,7 @@ package hu.sinap86.metlifefundhistory.report;
 
 import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.config.ReportGeneratorSettings;
-import hu.sinap86.metlifefundhistory.model.FundHistory;
+import hu.sinap86.metlifefundhistory.model.Contract;
 import hu.sinap86.metlifefundhistory.parser.TransactionHistoryProcessor;
 import hu.sinap86.metlifefundhistory.report.persist.SpreadsheetTransactionHistoryPersister;
 import hu.sinap86.metlifefundhistory.report.rate.FileRateProvider;
@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.*;
 
@@ -47,15 +46,20 @@ public class FundReportGenerator extends SwingWorker<Void, Void> {
 
     @Override
     protected Void doInBackground() throws Exception {
-        generate();
+        try {
+            generate();
+        } catch (Exception e) {
+            log.error("Exception occurred during execution:", e);
+        }
+        setProgress(100);
         return null;
     }
 
     private void generate() throws IOException {
         log.debug("report generation started.");
 
-        final Map<String, FundHistory> fundHistoryByName = new TransactionHistoryProcessor().process(settings.getTransactionHistoryDirectory());
-        if (fundHistoryByName.isEmpty()) {
+        final Contract contract = new TransactionHistoryProcessor().process(settings.getTransactionHistoryDirectory());
+        if (contract == null || contract.getFundHistories().isEmpty()) {
             setProgress(100);
             log.warn("No fund history elements were parsed.");
             return;
@@ -69,14 +73,12 @@ public class FundReportGenerator extends SwingWorker<Void, Void> {
 
         setProgress(TRANSACTION_LIST_PARSED_PROGRESS);
 
-        this.result = persist(fundHistoryByName);
+        this.result = persist(contract);
         log.debug("report generation finished.");
-        setProgress(100);
     }
 
-    private Result persist(final Map<String, FundHistory> fundHistoryByName) throws IOException {
-        // TODO get params from fundHistoryByName
-        final RateProvider rateProvider = settings.isUseOnlineRates() ? new OnlineRateProvider("653", "HUF") :
+    private Result persist(final Contract contract) throws IOException {
+        final RateProvider rateProvider = settings.isUseOnlineRates() ? new OnlineRateProvider(contract) :
                                           new FileRateProvider(settings.getRateFile());
         log.debug("Rates provided for active funds.");
 
@@ -89,7 +91,7 @@ public class FundReportGenerator extends SwingWorker<Void, Void> {
         final File resultFile = new File(settings.getTransactionHistoryDirectory(), Constants.REPORT_FILE_NAME);
 
         final SpreadsheetTransactionHistoryPersister persister = new SpreadsheetTransactionHistoryPersister(resultFile, rateProvider);
-        final List<String> warnings = persister.persist(fundHistoryByName);
+        final List<String> warnings = persister.persist(contract);
         log.debug("Report generated successfully with {} warnings.", warnings.size());
 
         return Result.builder()

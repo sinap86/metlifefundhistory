@@ -213,7 +213,11 @@ public class ApplicationFrame extends JFrame {
                     progressMonitor.setNote(String.format("Tranzakciók letöltve: %d%%.\n", progress));
                 }
                 if ("state".equals(propertyName) && SwingWorker.StateValue.DONE.equals(newValue)) {
-                    generateReport(querySettings);
+                    if (downloader.isSuccess()) {
+                        generateReport(querySettings);
+                    } else {
+                        showErrorDialog(this, "Sikertelen Online adatlekérdezés!");
+                    }
                 }
             };
 

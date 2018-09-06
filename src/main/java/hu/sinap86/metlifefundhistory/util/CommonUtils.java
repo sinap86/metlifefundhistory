@@ -1,10 +1,11 @@
 package hu.sinap86.metlifefundhistory.util;
 
+import hu.sinap86.metlifefundhistory.model.FundHistory;
+import hu.sinap86.metlifefundhistory.model.HistoryElement;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import hu.sinap86.metlifefundhistory.model.FundHistory;
-import hu.sinap86.metlifefundhistory.model.HistoryElement;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 
@@ -15,7 +16,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @UtilityClass
 public class CommonUtils {
@@ -69,17 +73,20 @@ public class CommonUtils {
         }
     }
 
-    public static void addHistoryElements(final Map<String, FundHistory> fundHistoryByName, final Collection<FundHistory> histories) {
-        histories.forEach(history -> {
-            final String fundName = history.getFundName();
-            if (fundHistoryByName.containsKey(fundName)) {
-                final FundHistory containedFundHistory = fundHistoryByName.get(fundName);
-                if (StringUtils.isEmpty(containedFundHistory.getFundCode())) {
-                    containedFundHistory.setFundCode(history.getFundCode());
-                }
-                containedFundHistory.getHistoryElements().addAll(history.getHistoryElements());
+
+    public static void add(final List<FundHistory> source, final List<FundHistory> target) {
+        source.forEach(sourceHistory -> {
+            final FundHistory targetHistory = target.stream()
+                    .filter(h -> StringUtils.equals(h.getFundName(), sourceHistory.getFundName()))
+                    .findFirst()
+                    .orElse(null);
+            if (targetHistory == null) {
+                target.add(sourceHistory);
             } else {
-                fundHistoryByName.put(fundName, history);
+                if (StringUtils.isEmpty(targetHistory.getFundCode())) {
+                    targetHistory.setFundCode(sourceHistory.getFundCode());
+                }
+                targetHistory.getHistoryElements().addAll(sourceHistory.getHistoryElements());
             }
         });
     }
@@ -99,6 +106,9 @@ public class CommonUtils {
                 .filter(historyElement -> historyElement.getSumAmount().compareTo(BigDecimal.ZERO) > 0)
                 .map(HistoryElement::getSumAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (BigDecimal.ZERO.equals(sumAmountOfPositiveTransactions)) {
+            return BigDecimal.ZERO;
+        }
         final BigDecimal totalBalanceInPercent = totalBalance.divide(sumAmountOfPositiveTransactions, RoundingMode.HALF_UP);
         // average yearly interest rate
         final long periodLengthInMonths = history.getPeriodLengthInMonths();

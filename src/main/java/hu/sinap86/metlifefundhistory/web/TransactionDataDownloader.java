@@ -1,20 +1,21 @@
 package hu.sinap86.metlifefundhistory.web;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.exception.TransactionDataDownloadException;
 import hu.sinap86.metlifefundhistory.util.CommonUtils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+
+import javax.swing.*;
 
 @Slf4j
 public class TransactionDataDownloader extends SwingWorker<Void, Void> {
@@ -23,6 +24,7 @@ public class TransactionDataDownloader extends SwingWorker<Void, Void> {
 
     private MetLifeWebSessionManager webSessionManager;
     private TransactionHistoryQuerySettings querySettings;
+    private boolean success;
 
     public TransactionDataDownloader(final MetLifeWebSessionManager webSessionManager, final TransactionHistoryQuerySettings querySettings) {
         CommonUtils.checkNotNull(webSessionManager, "webSessionManager");
@@ -33,7 +35,13 @@ public class TransactionDataDownloader extends SwingWorker<Void, Void> {
 
     @Override
     protected Void doInBackground() throws TransactionDataDownloadException {
-        download();
+        try {
+            download();
+            success = true;
+        } catch (Exception e) {
+            log.error("Exception occurred during execution:", e);
+        }
+        setProgress(100);
         return null;
     }
 
@@ -90,5 +98,9 @@ public class TransactionDataDownloader extends SwingWorker<Void, Void> {
             final Gson gson = new GsonBuilder().create();
             gson.toJson(transactionData, writer);
         }
+    }
+
+    public boolean isSuccess() {
+        return success;
     }
 }

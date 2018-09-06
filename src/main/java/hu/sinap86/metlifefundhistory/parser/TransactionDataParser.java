@@ -3,6 +3,7 @@ package hu.sinap86.metlifefundhistory.parser;
 import static hu.sinap86.metlifefundhistory.util.CommonUtils.getBigDecimal;
 import static hu.sinap86.metlifefundhistory.util.CommonUtils.getString;
 
+import hu.sinap86.metlifefundhistory.model.Contract;
 import hu.sinap86.metlifefundhistory.model.FundHistory;
 import hu.sinap86.metlifefundhistory.model.HistoryElement;
 import hu.sinap86.metlifefundhistory.util.CommonUtils;
@@ -11,12 +12,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.Builder;
-import org.apache.commons.collections4.list.TreeList;
 
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.List;
 
 @Builder
@@ -46,14 +45,16 @@ public class TransactionDataParser {
         this.priceDateTagName = priceDateTagName;
     }
 
-    public Collection<FundHistory> parse() {
-        final List<FundHistory> results = new TreeList<>();
-
+    public Contract parse() {
+        final Contract contract = parseContract(rootObject);
         final String transactionName = getString(rootObject, TRANSACTION_NAME);
         final String transactionCode = getString(rootObject, TRANSACTION_CODE);
         final String transactionDate = getString(rootObject, TRANSACTION_DATE);
 
+        final List<FundHistory> fundHistories = contract.getFundHistories();
         final JsonArray transactionArray = rootObject.getAsJsonArray(transactionArrayTagName);
+        CommonUtils.checkNotNull(transactionArray, "transactionArray");
+
         for (JsonElement transactionElement : transactionArray) {
             final JsonObject transaction = transactionElement.getAsJsonObject();
 
@@ -73,10 +74,26 @@ public class TransactionDataParser {
                     .rate(rate)
                     .priceDate(priceDate)
                     .build();
-            CommonUtils.add(results, fundName, fundCode, historyElement);
+            CommonUtils.add(fundHistories, fundName, fundCode, historyElement);
         }
+        return contract;
+    }
 
-        return results;
+    protected Contract parseContract(final JsonObject rootObject) {
+        final JsonObject contract = rootObject.getAsJsonObject("contract");
+        CommonUtils.checkNotNull(contract, "contract");
+
+        return Contract.builder()
+                .id(getString(contract, "contractId"))
+                .name(getString(contract, "fantasyName"))
+                .type(getString(contract, "contractTypeNumber"))
+                .typeName(getString(contract, "contractTypeName"))
+                .currency(getString(contract, "currency"))
+                .actualValue(getBigDecimal(contract, "actualValue"))
+                .surrenderValue(getBigDecimal(contract, "surrenderValue"))
+                .dueAmount(getBigDecimal(contract, "dueAmount"))
+                .paidToDate(getString(contract, "paidToDate"))
+                .build();
     }
 
     public static class TransactionDataParserFactory {

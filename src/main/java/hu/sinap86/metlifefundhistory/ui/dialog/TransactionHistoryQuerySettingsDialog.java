@@ -2,6 +2,7 @@ package hu.sinap86.metlifefundhistory.ui.dialog;
 
 import com.github.lgooddatepicker.components.DatePicker;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
+import hu.sinap86.metlifefundhistory.model.Contract;
 import hu.sinap86.metlifefundhistory.ui.component.RateSettingsPanel;
 import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
 import org.apache.commons.collections4.CollectionUtils;
@@ -29,7 +30,7 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
     public TransactionHistoryQuerySettingsDialog(final Frame owner, final MetLifeWebSessionManager webSessionManager) {
         super(owner, "Lekérdezés beállítások", true);
 
-        final List<MetLifeWebSessionManager.Contract> contracts = webSessionManager.getUserContracts();
+        final List<Contract> contracts = webSessionManager.getUserContracts();
 
         rateSettingsPanel = new RateSettingsPanel();
 
@@ -40,12 +41,12 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
         postConstruct(owner);
     }
 
-    private JPanel createQuerySettingsPanel(final List<MetLifeWebSessionManager.Contract> contracts) {
+    private JPanel createQuerySettingsPanel(final List<Contract> contracts) {
         final JPanel querySettingsPanel = new JPanel(new GridBagLayout());
 
         addLabel("Szerződések:", querySettingsPanel, 0, 0);
 
-        final String[] contractIds = contracts.stream().map(MetLifeWebSessionManager.Contract::getId).toArray(String[]::new);
+        final String[] contractIds = contracts.stream().map(Contract::getId).toArray(String[]::new);
         cbContracts = new JComboBox<>(contractIds);
         cbContracts.setSelectedIndex(0);
         cbContracts.setEnabled(CollectionUtils.size(contracts) > 1);

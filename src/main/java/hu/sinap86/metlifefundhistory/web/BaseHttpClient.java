@@ -113,7 +113,7 @@ public class BaseHttpClient {
 
     public JsonObject executeGetRequestForJsonReply(final String requestUrl, final String... requestParams) throws IOException {
         final HttpUriRequest request = ArrayUtils.isEmpty(requestParams) ?
-                                       new HttpGet(requestUrl) : new HttpGet(String.format(requestUrl, requestParams));
+                                       new HttpGet(requestUrl) : new HttpGet(String.format(requestUrl, (Object[]) requestParams));
         final String responseString = execute(request);
         return CommonUtils.getAsJsonObject(responseString);
     }
@@ -130,7 +130,7 @@ public class BaseHttpClient {
         }
 
         log.debug("Executing request: {}", request.getRequestLine());
-        log.debug("Headers: {}", request.getAllHeaders());
+        log.debug("Headers: {}", (Object[]) request.getAllHeaders());
         final CloseableHttpResponse response = httpclient.execute(request);
         try {
             log.debug("Response: {}", response.getStatusLine());
