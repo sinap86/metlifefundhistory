@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.swing.*;
@@ -88,9 +89,7 @@ public class FundReportGenerator extends SwingWorker<Void, Void> {
         }
         setProgress(RATES_PROVIDED_PROGRESS);
 
-        // TODO ha van már ilyen fájl akkor esetleg legyen más a fájlnév
-        final File resultFile = new File(settings.getTransactionHistoryDirectory(), Constants.REPORT_FILE_NAME);
-
+        final File resultFile = getResultFile();
         final SpreadsheetTransactionHistoryPersister persister = new SpreadsheetTransactionHistoryPersister(resultFile, rateProvider);
         final List<String> warnings = persister.persist(contract);
         log.debug("Report generated successfully with {} warnings.", warnings.size());
@@ -99,6 +98,11 @@ public class FundReportGenerator extends SwingWorker<Void, Void> {
                 .reportFile(resultFile)
                 .warnings(warnings)
                 .build();
+    }
+
+    private File getResultFile() {
+        final String filename = String.format("results-%s.xlsx", LocalDateTime.now().format(Constants.RESULT_FILE_NAME_FORMATTER));
+        return new File(settings.getTransactionHistoryDirectory(), filename);
     }
 
     public Result getResult() {
