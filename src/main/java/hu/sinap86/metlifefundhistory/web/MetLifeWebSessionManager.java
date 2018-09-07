@@ -12,7 +12,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.jsoup.Jsoup;
@@ -54,24 +53,22 @@ public class MetLifeWebSessionManager {
 
     private BaseHttpClient httpClient;
 
-    private boolean cookiesAccepted;
     private boolean authenticationWithPasswordSucceeded;
     private boolean authenticationWithSmsOtpSucceeded;
 
     private BaseHttpClient getHttpClient() {
         if (httpClient == null) {
             httpClient = new BaseHttpClient(true);
+            httpClient.addCookie("acceptcookie", "Yes", "www.metlifehungary.hu");
         }
         return httpClient;
     }
 
-    public List<FundRate> getRates(final Contract contract, final LocalDate date) throws IOException {
-        CommonUtils.checkNotNull(date, "date");
-
-        makeAcceptCookiesRequestIfNecessary();
+    public List<FundRate> getRates(final Contract contract, final LocalDate queryDate) throws IOException {
+        CommonUtils.checkNotNull(queryDate, "queryDate");
 
         final String paddedContractTypeNumber = StringUtils.leftPad(contract.getType(), 4, '0');
-        final String dateStr = date.format(Constants.DATE_FORMATTER);
+        final String queryDateStr = queryDate.format(Constants.DATE_FORMATTER);
 
         final HttpUriRequest rateRequest = RequestBuilder.get()
                 .setUri(makeUri("http://www.metlifehungary.hu/portfoliok/portfoliovalues/index.jsp"))
@@ -81,23 +78,15 @@ public class MetLifeWebSessionManager {
                 .addParameter("compareMode", "compareContract")
                 .addParameter("mainComponentCode", paddedContractTypeNumber)
                 .addParameter("currency", contract.getCurrency())
-                .addParameter("from", dateStr)
-                .addParameter("yahoo_calendarInput1-yearselect", String.valueOf(date.getYear()))
-                .addParameter("to", dateStr)
-                .addParameter("yahoo_calendarInput2-yearselect", String.valueOf(date.getYear()))
+                .addParameter("from", queryDateStr)
+                .addParameter("yahoo_calendarInput1-yearselect", String.valueOf(queryDate.getYear()))
+                .addParameter("to", queryDateStr)
+                .addParameter("yahoo_calendarInput2-yearselect", String.valueOf(queryDate.getYear()))
                 .addParameter("next", "Összehasonlítás")
                 .build();
         final String responseHtml = getHttpClient().execute(rateRequest);
 
         return extractRatesFromHtml(responseHtml);
-    }
-
-    private void makeAcceptCookiesRequestIfNecessary() throws IOException {
-        if (cookiesAccepted) {
-            return;
-        }
-        getHttpClient().execute(new HttpGet("https://www.metlifehungary.hu/cookie/accept_e.html"));
-        cookiesAccepted = true;
     }
 
     private URI makeUri(final String url) throws IOException {

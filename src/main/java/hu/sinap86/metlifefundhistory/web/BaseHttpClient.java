@@ -26,6 +26,7 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
@@ -169,4 +170,10 @@ public class BaseHttpClient {
         }
     }
 
+    public void addCookie(final String name, final String value, final String domain) {
+        final BasicClientCookie cookie = new BasicClientCookie(name, value);
+        cookie.setDomain(domain);
+        cookie.setPath("/");
+        cookieStore.addCookie(cookie);
+    }
 }

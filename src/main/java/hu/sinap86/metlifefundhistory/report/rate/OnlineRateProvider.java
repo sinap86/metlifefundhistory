@@ -26,13 +26,12 @@ public class OnlineRateProvider implements RateProvider {
         CommonUtils.checkNotNull(contract.getType(), "contractTypeNumber");
         CommonUtils.checkNotNull(contract.getCurrency(), "currency");
 
-        final LocalDate now = LocalDate.now();
-        rateDateString = now.format(Constants.DATE_FORMATTER);
+        final LocalDate queryDate = LocalDate.now().minusDays(1);
+        rateDateString = queryDate.format(Constants.DATE_FORMATTER);
 
         webSessionManager = new MetLifeWebSessionManager();
-        fundRates = webSessionManager.getRates(contract, now);
+        fundRates = webSessionManager.getRates(contract, queryDate);
         ratesLoadedSuccessfully = CollectionUtils.isNotEmpty(fundRates);
-        // TODO ha nincsenek árfolyamok, akkor kérjük le az előző napra
     }
 
     @Override
