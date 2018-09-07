@@ -226,6 +226,7 @@ public class SpreadsheetTransactionHistoryPersister {
         final boolean notSold = !fundHistorySummary.fundSold;
         final Color color = getColor(fundHistorySummary.totalBalance);
         final CellStyle cellStyleText = createCellStyle(null, notSold);
+        final CellStyle cellStyleRedText = createCellStyle(null, Color.RED, notSold);
         final CellStyle cellStyleAmount = createCellStyle(CELL_STYLE_AMOUNT, notSold);
 
         final XSSFRow row = nextRow(summarySheet);
@@ -249,7 +250,7 @@ public class SpreadsheetTransactionHistoryPersister {
             if (rateProvider.isRatesLoadedSuccessfully() && fundHistorySummary.currentValue != null) {
                 createCell(row, String.format("%s-i állapot szerint", rateProvider.getRateDate()), cellStyleText);
             } else {
-                createCell(row, "Hiányzó árfolyam", cellStyleText);
+                createCell(row, "Hiányzó árfolyam", cellStyleRedText);
             }
         }
     }
@@ -258,26 +259,35 @@ public class SpreadsheetTransactionHistoryPersister {
         final CellStyle boldBordered = createBoldBorderedCellStyle();
         final CellStyle boldBorderedAmount = createBoldBorderedCellStyle(CELL_STYLE_AMOUNT);
 
+        final boolean hasAtLeastOneActiveFundWithoutRate = fundHistorySummaryList.stream().anyMatch(s -> !s.fundSold && s.getRate() == null);
+
         final XSSFRow row = nextRow(summarySheet);
         createCell(row, "Össezsen", boldBordered);
-        createCell(row, sumOrNull(fundHistorySummaryList, FundHistorySummary::getDepositSum), boldBorderedAmount);
-        createCell(row, sumOrNull(fundHistorySummaryList, FundHistorySummary::getReductionSum), boldBorderedAmount);
+        createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getDepositSum), boldBorderedAmount);
+        createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getReductionSum), boldBorderedAmount);
         if (rateProvider.isRatesLoadedSuccessfully()) {
-            createCell(row, sumOrNull(fundHistorySummaryList, FundHistorySummary::getCurrentValue), boldBorderedAmount);
+            if (hasAtLeastOneActiveFundWithoutRate) {
+                createCell(row, StringUtils.EMPTY, boldBordered);
+            } else {
+                createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getCurrentValue), boldBorderedAmount);
+            }
         }
-        createCell(row, sumOrNull(fundHistorySummaryList, FundHistorySummary::getTotalBalance), boldBorderedAmount);
+        if (hasAtLeastOneActiveFundWithoutRate) {
+            createCell(row, StringUtils.EMPTY, boldBordered);
+        } else {
+            createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getTotalBalance), boldBorderedAmount);
+        }
         createCell(row, null, boldBordered);
 
     }
 
-    private BigDecimal sumOrNull(final List<FundHistorySummary> fundHistorySummaryList, final Function<FundHistorySummary, BigDecimal> function) {
+    private BigDecimal sum(final List<FundHistorySummary> fundHistorySummaryList, final Function<FundHistorySummary, BigDecimal> function) {
         BigDecimal sum = BigDecimal.ZERO;
         for (FundHistorySummary summary : fundHistorySummaryList) {
             final BigDecimal result = function.apply(summary);
-            if (result == null) {
-                return null;
+            if (result != null) {
+                sum = sum.add(result);
             }
-            sum = sum.add(result);
         }
         return sum;
     }
