@@ -1,20 +1,27 @@
 package hu.sinap86.metlifefundhistory.ui.dialog;
 
-import com.github.lgooddatepicker.components.DatePicker;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.addComponent;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.addLabel;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.addTextField;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.createDatePicker;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.showErrorDialog;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.showFileChooser;
+
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.model.Contract;
 import hu.sinap86.metlifefundhistory.ui.component.RateSettingsPanel;
-import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
+import hu.sinap86.metlifefundhistory.web.session.WebSessionManager;
+
+import com.github.lgooddatepicker.components.DatePicker;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.List;
 
-import static hu.sinap86.metlifefundhistory.util.UIUtils.*;
+import javax.swing.*;
 
 public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
 
@@ -27,7 +34,7 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
     private DatePicker dpToDate;
     private JTextField tfSelectedDirectory;
 
-    public TransactionHistoryQuerySettingsDialog(final Frame owner, final MetLifeWebSessionManager webSessionManager) {
+    public TransactionHistoryQuerySettingsDialog(final Frame owner, final WebSessionManager webSessionManager) {
         super(owner, "Lekérdezés beállítások", true);
 
         final List<Contract> contracts = webSessionManager.getUserContracts();

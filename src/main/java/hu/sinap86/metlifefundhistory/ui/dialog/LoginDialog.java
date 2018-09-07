@@ -1,27 +1,33 @@
 package hu.sinap86.metlifefundhistory.ui.dialog;
 
-import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.addComponent;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.addFocusTraversalKey;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.addLabel;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.addTextField;
+import static hu.sinap86.metlifefundhistory.util.UIUtils.showErrorDialog;
+
+import hu.sinap86.metlifefundhistory.web.session.WebSessionManager;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.swing.*;
-import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
-import static hu.sinap86.metlifefundhistory.util.UIUtils.*;
+import javax.swing.*;
+import javax.swing.border.EtchedBorder;
 
 public class LoginDialog extends BaseDialog {
 
-    private final MetLifeWebSessionManager webSessionManager;
+    private final WebSessionManager webSessionManager;
     private JTextField tfName;
     private JPasswordField pfPassword;
     private JTextField tfSmsOtp;
     private JButton btnLogin;
 
-    public LoginDialog(final JFrame owner, final MetLifeWebSessionManager webSessionManager) {
+    public LoginDialog(final JFrame owner, final WebSessionManager webSessionManager) {
         super(owner, "Bejelentkezés", true);
         this.webSessionManager = webSessionManager;
 
@@ -103,7 +109,7 @@ public class LoginDialog extends BaseDialog {
                 return;
             }
 
-            final boolean success = webSessionManager.authenticate(userName, password);
+            final boolean success = webSessionManager.authenticateWithPassword(userName, password);
             if (success) {
                 btnLogin.setText("Bejelentkezés");
                 tfName.setEnabled(false);
@@ -124,7 +130,7 @@ public class LoginDialog extends BaseDialog {
                 return;
             }
 
-            final boolean success = webSessionManager.authenticate(smsOtp);
+            final boolean success = webSessionManager.authenticateWithSmsOtp(smsOtp);
             if (success) {
                 setVisible(false);
                 dispose();

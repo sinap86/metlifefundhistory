@@ -4,6 +4,7 @@ import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.config.TransactionHistoryQuerySettings;
 import hu.sinap86.metlifefundhistory.exception.TransactionDataDownloadException;
 import hu.sinap86.metlifefundhistory.util.CommonUtils;
+import hu.sinap86.metlifefundhistory.web.session.WebSessionManager;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -22,11 +23,11 @@ public class TransactionDataDownloader extends SwingWorker<Void, Void> {
 
     private static final int TRANSACTION_LIST_QUERY_PROGRESS = 10;
 
-    private MetLifeWebSessionManager webSessionManager;
+    private WebSessionManager webSessionManager;
     private TransactionHistoryQuerySettings querySettings;
     private boolean success;
 
-    public TransactionDataDownloader(final MetLifeWebSessionManager webSessionManager, final TransactionHistoryQuerySettings querySettings) {
+    public TransactionDataDownloader(final WebSessionManager webSessionManager, final TransactionHistoryQuerySettings querySettings) {
         CommonUtils.checkNotNull(webSessionManager, "webSessionManager");
         CommonUtils.checkNotNull(querySettings, "querySettings");
         this.webSessionManager = webSessionManager;

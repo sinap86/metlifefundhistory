@@ -3,7 +3,8 @@ package hu.sinap86.metlifefundhistory.report.rate;
 import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.model.Contract;
 import hu.sinap86.metlifefundhistory.util.CommonUtils;
-import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
+import hu.sinap86.metlifefundhistory.web.session.MetLifeWebSessionManager;
+import hu.sinap86.metlifefundhistory.web.session.WebSessionManager;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -16,10 +17,10 @@ import java.util.List;
 @Slf4j
 public class OnlineRateProvider implements RateProvider {
 
-    private final List<MetLifeWebSessionManager.FundRate> fundRates;
+    private final List<WebSessionManager.FundRate> fundRates;
     private final String rateDateString;
 
-    private final MetLifeWebSessionManager webSessionManager;
+    private final WebSessionManager webSessionManager;
     private boolean ratesLoadedSuccessfully;
 
     public OnlineRateProvider(final Contract contract) throws IOException {
@@ -30,7 +31,7 @@ public class OnlineRateProvider implements RateProvider {
         rateDateString = queryDate.format(Constants.DATE_FORMATTER);
 
         webSessionManager = new MetLifeWebSessionManager();
-        fundRates = webSessionManager.getRates(contract, queryDate);
+        fundRates = webSessionManager.getFundRates(contract, queryDate);
         ratesLoadedSuccessfully = CollectionUtils.isNotEmpty(fundRates);
     }
 
@@ -53,7 +54,7 @@ public class OnlineRateProvider implements RateProvider {
          * so cannot look for exact match.
          */
         final String[] fundNameWords = fundName.split(" ");
-        for (MetLifeWebSessionManager.FundRate fundRate : fundRates) {
+        for (WebSessionManager.FundRate fundRate : fundRates) {
             boolean containsAllWords = true;
             for (String fundNameWord : fundNameWords) {
                 containsAllWords = containsAllWords

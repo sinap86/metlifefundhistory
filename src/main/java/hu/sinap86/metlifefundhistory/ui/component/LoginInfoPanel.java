@@ -4,7 +4,7 @@ import static hu.sinap86.metlifefundhistory.util.UIUtils.addLabel;
 
 import hu.sinap86.metlifefundhistory.config.Constants;
 import hu.sinap86.metlifefundhistory.model.Contract;
-import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
+import hu.sinap86.metlifefundhistory.web.session.WebSessionManager;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -16,9 +16,9 @@ import javax.swing.*;
 
 public class LoginInfoPanel extends JPanel {
 
-    private final MetLifeWebSessionManager webSessionManager;
+    private final WebSessionManager webSessionManager;
 
-    public LoginInfoPanel(final MetLifeWebSessionManager webSessionManager) {
+    public LoginInfoPanel(final WebSessionManager webSessionManager) {
         this.webSessionManager = webSessionManager;
         if (!webSessionManager.isAuthenticated()) {
             throw new IllegalStateException("User not logged in!");
@@ -35,7 +35,7 @@ public class LoginInfoPanel extends JPanel {
     }
 
     private JPanel createUserInfoPanel() {
-        final MetLifeWebSessionManager.User user = webSessionManager.getUser();
+        final WebSessionManager.User user = webSessionManager.getUser();
 
         final JPanel userInfoPanel = new JPanel(new GridBagLayout());
 

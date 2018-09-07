@@ -14,8 +14,9 @@ import hu.sinap86.metlifefundhistory.ui.dialog.LoginDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.ReportGeneratorSettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.SettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.TransactionHistoryQuerySettingsDialog;
-import hu.sinap86.metlifefundhistory.web.MetLifeWebSessionManager;
 import hu.sinap86.metlifefundhistory.web.TransactionDataDownloader;
+import hu.sinap86.metlifefundhistory.web.session.MockedWebSessionManager;
+import hu.sinap86.metlifefundhistory.web.session.WebSessionManager;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -36,7 +37,7 @@ import javax.swing.text.html.HTMLEditorKit;
 @Slf4j
 public class ApplicationFrame extends JFrame {
 
-    private final MetLifeWebSessionManager webSessionManager = new MetLifeWebSessionManager();
+    private final WebSessionManager webSessionManager = new MockedWebSessionManager();
 
     private JComponent usageDescriptionPanel;
 
@@ -65,8 +66,12 @@ public class ApplicationFrame extends JFrame {
                                           "Biztosan kilép?", "Kilépés",
                                           JOptionPane.YES_NO_OPTION,
                                           JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
-            if (webSessionManager.isAuthenticated()) {
-                webSessionManager.logout();
+            try {
+                if (webSessionManager.isAuthenticated()) {
+                    webSessionManager.logout();
+                }
+            } catch (Exception e) {
+                log.error("Error occured during logout:", e);
             }
             System.exit(0);
         }
