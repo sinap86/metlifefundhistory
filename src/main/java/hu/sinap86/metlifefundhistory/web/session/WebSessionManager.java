@@ -53,6 +53,6 @@ public interface WebSessionManager {
 
     JsonObject queryTransactionData(final TransactionDetailLinksExtractor.Link url) throws IOException;
 
-    void logout();
+    void logout() throws IOException;
 
 }

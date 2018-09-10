@@ -13,7 +13,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -268,9 +267,13 @@ public class MetLifeWebSessionManager implements WebSessionManager {
     }
 
     @Override
-    public void logout() {
-        // TODO
-        throw new NotImplementedException("logout");
+    public void logout() throws IOException {
+        checkAuthenticated();
+
+        final HttpUriRequest logoutRequest = RequestBuilder.get()
+                .setUri(makeUri("https://www.metlifehungary.hu/eFund/logout"))
+                .build();
+        getHttpClient().execute(logoutRequest);
     }
 
     private URI makeUri(final String url) throws IOException {
