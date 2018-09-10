@@ -109,7 +109,7 @@ public class LoginDialog extends BaseDialog {
                 return;
             }
 
-            final boolean success = webSessionManager.authenticateWithPassword(userName, password);
+            final boolean success = webSessionManager.authenticateWithPassword(userName, new String(password));
             if (success) {
                 btnLogin.setText("Bejelentkezés");
                 tfName.setEnabled(false);

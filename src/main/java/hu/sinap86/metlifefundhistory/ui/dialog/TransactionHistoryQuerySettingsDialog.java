@@ -19,7 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.awt.*;
 import java.io.File;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 
 import javax.swing.*;
 
@@ -37,7 +37,7 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
     public TransactionHistoryQuerySettingsDialog(final Frame owner, final WebSessionManager webSessionManager) {
         super(owner, "Lekérdezés beállítások", true);
 
-        final List<Contract> contracts = webSessionManager.getUserContracts();
+        final Set<Contract> contracts = webSessionManager.getUserContracts();
 
         rateSettingsPanel = new RateSettingsPanel();
 
@@ -48,7 +48,7 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
         postConstruct(owner);
     }
 
-    private JPanel createQuerySettingsPanel(final List<Contract> contracts) {
+    private JPanel createQuerySettingsPanel(final Set<Contract> contracts) {
         final JPanel querySettingsPanel = new JPanel(new GridBagLayout());
 
         addLabel("Szerződések:", querySettingsPanel, 0, 0);

@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Set;
 
 import javax.swing.*;
 
@@ -52,10 +52,10 @@ public class LoginInfoPanel extends JPanel {
         final JPanel contractsPanel = new JPanel();
         contractsPanel.setLayout(new BoxLayout(contractsPanel, BoxLayout.Y_AXIS));
 
-        final List<Contract> userContracts = webSessionManager.getUserContracts();
-        for (int i = 0; i < userContracts.size(); i++) {
+        final Set<Contract> userContracts = webSessionManager.getUserContracts();
+        for (Contract userContract : userContracts) {
             contractsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-            contractsPanel.add(createContractPanel(userContracts.get(i)));
+            contractsPanel.add(createContractPanel(userContract));
         }
 
         final JScrollPane scrollPane = new JScrollPane(contractsPanel);

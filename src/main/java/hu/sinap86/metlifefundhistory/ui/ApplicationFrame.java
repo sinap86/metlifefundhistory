@@ -15,7 +15,7 @@ import hu.sinap86.metlifefundhistory.ui.dialog.ReportGeneratorSettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.SettingsDialog;
 import hu.sinap86.metlifefundhistory.ui.dialog.TransactionHistoryQuerySettingsDialog;
 import hu.sinap86.metlifefundhistory.web.TransactionDataDownloader;
-import hu.sinap86.metlifefundhistory.web.session.MockedWebSessionManager;
+import hu.sinap86.metlifefundhistory.web.session.MetLifeWebSessionManager;
 import hu.sinap86.metlifefundhistory.web.session.WebSessionManager;
 
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ import javax.swing.text.html.HTMLEditorKit;
 @Slf4j
 public class ApplicationFrame extends JFrame {
 
-    private final WebSessionManager webSessionManager = new MockedWebSessionManager();
+    private final WebSessionManager webSessionManager = new MetLifeWebSessionManager();
 
     private JComponent usageDescriptionPanel;
 

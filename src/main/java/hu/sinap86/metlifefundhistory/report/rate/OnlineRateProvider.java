@@ -28,7 +28,7 @@ public class OnlineRateProvider implements RateProvider {
         CommonUtils.checkNotNull(contract.getCurrency(), "currency");
 
         final LocalDate queryDate = LocalDate.now().minusDays(1);
-        rateDateString = queryDate.format(Constants.DATE_FORMATTER);
+        rateDateString = queryDate.format(Constants.DATE_FORMATTER_DOTTED);
 
         webSessionManager = new MetLifeWebSessionManager();
         fundRates = webSessionManager.getFundRates(contract, queryDate);

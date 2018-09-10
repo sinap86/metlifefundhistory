@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 public interface WebSessionManager {
 
@@ -34,7 +35,7 @@ public interface WebSessionManager {
 
     List<FundRate> getFundRates(final Contract contract, final LocalDate queryDate) throws IOException;
 
-    boolean authenticateWithPassword(final String userName, final char[] password);
+    boolean authenticateWithPassword(final String userName, final String password);
 
     boolean authenticateWithSmsOtp(final String smsOtp);
 
@@ -46,11 +47,11 @@ public interface WebSessionManager {
 
     User getUser();
 
-    List<Contract> getUserContracts();
+    Set<Contract> getUserContracts();
 
-    JsonObject queryTransactionHistory(final TransactionHistoryQuerySettings querySettings);
+    JsonObject queryTransactionHistory(final TransactionHistoryQuerySettings querySettings) throws IOException;
 
-    JsonObject queryTransactionData(final TransactionDetailLinksExtractor.Link url);
+    JsonObject queryTransactionData(final TransactionDetailLinksExtractor.Link url) throws IOException;
 
     void logout();
 

@@ -7,6 +7,7 @@ import hu.sinap86.metlifefundhistory.util.CommonUtils;
 import hu.sinap86.metlifefundhistory.web.TransactionDetailLinksExtractor;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -37,7 +39,7 @@ public class MockedWebSessionManager implements WebSessionManager {
     }
 
     @Override
-    public boolean authenticateWithPassword(final String userName, final char[] password) {
+    public boolean authenticateWithPassword(final String userName, final String password) {
         authenticationWithPasswordSucceeded = "1".equals(userName);
         log.debug("Authenticate user '{}' with userName and password {}", userName, (authenticationWithPasswordSucceeded ? "succeeded." : "NOT succeeded."));
         return authenticationWithPasswordSucceeded;
@@ -75,7 +77,7 @@ public class MockedWebSessionManager implements WebSessionManager {
     }
 
     @Override
-    public List<Contract> getUserContracts() {
+    public Set<Contract> getUserContracts() {
         final Contract contract = Contract.builder()
                 .id("123456")
                 .name("Presztízs")
@@ -87,9 +89,7 @@ public class MockedWebSessionManager implements WebSessionManager {
                 .dueAmount(BigDecimal.ZERO)
                 .paidToDate("2018-12-28")
                 .build();
-        return Lists.newArrayList(contract
-//                , contract, contract, contract, contract
-        );
+        return Sets.newHashSet(contract);
     }
 
     @Override

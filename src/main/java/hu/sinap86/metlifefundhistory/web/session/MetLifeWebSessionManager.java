@@ -8,6 +8,8 @@ import hu.sinap86.metlifefundhistory.web.BaseHttpClient;
 import hu.sinap86.metlifefundhistory.web.TransactionDetailLinksExtractor;
 
 import com.google.common.collect.Lists;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -27,10 +29,17 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 public class MetLifeWebSessionManager implements WebSessionManager {
+
+    private boolean authenticationWithPasswordSucceeded;
+    private boolean authenticationWithSmsOtpSucceeded;
+    private User user;
+    private final Set<Contract> contracts = new HashSet<>();
 
     private BaseHttpClient httpClient;
 
@@ -47,7 +56,7 @@ public class MetLifeWebSessionManager implements WebSessionManager {
         CommonUtils.checkNotNull(queryDate, "queryDate");
 
         final String paddedContractTypeNumber = StringUtils.leftPad(contract.getType(), 4, '0');
-        final String queryDateStr = queryDate.format(Constants.DATE_FORMATTER);
+        final String queryDateStr = queryDate.format(Constants.DATE_FORMATTER_DOTTED);
 
         final HttpUriRequest rateRequest = RequestBuilder.get()
                 .setUri(makeUri("http://www.metlifehungary.hu/portfoliok/portfoliovalues/index.jsp"))
@@ -65,17 +74,9 @@ public class MetLifeWebSessionManager implements WebSessionManager {
                 .build();
         final String responseHtml = getHttpClient().execute(rateRequest);
 
-        return extractRatesFromHtml(responseHtml);
-    }
-
-    private URI makeUri(final String url) throws IOException {
-        final URI uri;
-        try {
-            uri = new URI(url);
-        } catch (URISyntaxException e) {
-            throw new IOException(e);
-        }
-        return uri;
+        final List<FundRate> fundRates = extractRatesFromHtml(responseHtml);
+        log.info("{} exchange rate(s) extracted from online response.", fundRates);
+        return fundRates;
     }
 
     private List<FundRate> extractRatesFromHtml(final String responseHtml) {
@@ -109,54 +110,188 @@ public class MetLifeWebSessionManager implements WebSessionManager {
     }
 
     @Override
-    public boolean authenticateWithPassword(final String userName, final char[] password) {
-        throw new NotImplementedException("authenticateWithPassword");
+    public boolean authenticateWithPassword(final String userName, final String password) {
+        try {
+            final HttpUriRequest loginRequest = RequestBuilder.post()
+                    .setUri(makeUri("https://www.metlifehungary.hu/security/UI/Login?realm=efund"))
+                    .addParameter("IDToken1", userName)
+                    .addParameter("IDToken2", password)
+                    .build();
+
+            final String responseHtml = getHttpClient().execute(loginRequest);
+            authenticationWithPasswordSucceeded = isSuccess(responseHtml);
+        } catch (Exception e) {
+            log.error("Cannot authenticate with user name and password:", e);
+            authenticationWithPasswordSucceeded = false;
+        }
+        log.info("Authenticate user '{}' with userName and password {}", userName, (authenticationWithPasswordSucceeded ? "succeeded." : "NOT succeeded."));
+        return authenticationWithPasswordSucceeded;
     }
 
     @Override
     public boolean authenticateWithSmsOtp(final String smsOtp) {
-        throw new NotImplementedException("authenticateWithSmsOtp");
+        if (!authenticationWithPasswordSucceeded) {
+            throw new IllegalStateException("Call authenticateWithPassword() first!");
+        }
+
+        try {
+            final HttpUriRequest smsAuthRequest = RequestBuilder.post()
+                    .setUri(new URI("https://www.metlifehungary.hu/security/UI/Login?realm=efund"))
+                    .addParameter("IDToken1", smsOtp)
+                    .build();
+
+            final String responseHtml = getHttpClient().execute(smsAuthRequest);
+            authenticationWithSmsOtpSucceeded = isSuccess(responseHtml);
+        } catch (Exception e) {
+            log.error("Cannot authenticate with SMS OTP:", e);
+            authenticationWithSmsOtpSucceeded = false;
+        }
+        log.info("Authenticate with sms OTP {}", (authenticationWithSmsOtpSucceeded ? "succeeded." : "NOT succeeded."));
+        return authenticationWithSmsOtpSucceeded;
     }
 
     @Override
     public boolean isAuthenticationWithPasswordSucceeded() {
-        throw new NotImplementedException("isAuthenticationWithPasswordSucceeded");
+        return authenticationWithPasswordSucceeded;
     }
 
     @Override
     public boolean isAuthenticationWithSmsOtpSucceeded() {
-        throw new NotImplementedException("isAuthenticationWithSmsOtpSucceeded");
+        return authenticationWithSmsOtpSucceeded;
     }
 
     // TODO valami figyelés kellene a háttérben, hogy lejárt-e a session
     @Override
     public boolean isAuthenticated() {
-        throw new NotImplementedException("isAuthenticated");
+        return authenticationWithPasswordSucceeded && authenticationWithSmsOtpSucceeded;
     }
 
     @Override
     public User getUser() {
-        throw new NotImplementedException("getUser");
+        checkAuthenticated();
+
+        if (user != null) {
+            log.debug("User data returned from cache.");
+            return user;
+        }
+
+        try {
+            final JsonObject userReply = getHttpClient().executeGetRequestForJsonReply("https://www.metlifehungary.hu/eFund/api/security/user");
+            final String userId = CommonUtils.getString(userReply, "name");
+            if (StringUtils.isEmpty(userId)) {
+                throw new IllegalStateException("Cannot extract user id from reply!");
+            }
+
+            final JsonObject headerReply = getHttpClient().executeGetRequestForJsonReply(String.format(
+                    "https://www.metlifehungary.hu/eFund/api/owners/%s/header", userId
+            ));
+            final String name = CommonUtils.getString(headerReply, "ownersName");
+
+            user = User.builder()
+                    .id(userId)
+                    .name(name)
+                    .lastLogin(CommonUtils.getString(headerReply, "lastLogin"))
+                    .build();
+            log.info("User data of '{}' queried successfully.", name);
+        } catch (Exception e) {
+            log.error("Cannot query user data:", e);
+            user = null;
+        }
+        return user;
     }
 
     @Override
-    public List<Contract> getUserContracts() {
-        throw new NotImplementedException("getUserContracts");
+    public Set<Contract> getUserContracts() {
+        checkAuthenticated();
+
+        if (CollectionUtils.isNotEmpty(contracts)) {
+            log.debug("Contracts' data returned from cache.");
+            return contracts;
+        }
+
+        try {
+            final JsonObject contractsReply = getHttpClient().executeGetRequestForJsonReply("https://www.metlifehungary.hu/eFund/api/owners/%s/ownerscontracts", user.getId());
+            final JsonArray contractElements = contractsReply.getAsJsonArray("contracts");
+            for (JsonElement contractElement : contractElements) {
+                final JsonObject contractData = contractElement.getAsJsonObject().getAsJsonObject("contractData");
+
+                final Contract contract = Contract.builder()
+                        .id(CommonUtils.getString(contractData, "contractId"))
+                        .name(CommonUtils.getString(contractData, "fantasyName"))
+                        .type(CommonUtils.getString(contractData, "contractTypeNumber"))
+                        .typeName(CommonUtils.getString(contractData, "contractTypeName"))
+                        .currency(CommonUtils.getString(contractData, "currency"))
+                        .actualValue(CommonUtils.getBigDecimal(contractData, "actualValue"))
+                        .surrenderValue(CommonUtils.getBigDecimal(contractData, "surrenderValue"))
+                        .dueAmount(CommonUtils.getBigDecimal(contractData, "dueAmount"))
+                        .paidToDate(CommonUtils.getString(contractData, "paidToDate"))
+                        .build();
+                contracts.add(contract);
+            }
+            log.info("{} contracts' data extracted from online response.", contracts.size());
+
+        } catch (Exception e) {
+            log.error("Cannot get user contacts' data:", e);
+            contracts.clear();
+        }
+        return contracts;
     }
 
     @Override
-    public JsonObject queryTransactionHistory(final TransactionHistoryQuerySettings querySettings) {
-        throw new NotImplementedException("queryTransactionHistory");
+    public JsonObject queryTransactionHistory(final TransactionHistoryQuerySettings querySettings) throws IOException {
+        checkAuthenticated();
+
+        final StringBuilder sbRequestUrl = new StringBuilder()
+                .append("https://www.metlifehungary.hu/eFund/api/owners/")
+                .append(user.getId())
+                .append("/contracts/")
+                .append(querySettings.getContract())
+                .append("/sumlifetransactions?dateFrom=")
+                .append(querySettings.getFromDate().format(Constants.DATE_FORMATTER_DASHED))
+                .append("&dateTo=")
+                .append(querySettings.getToDate().format(Constants.DATE_FORMATTER_DASHED))
+                .append("&recordFrom=1&recordTo=")
+                .append(Constants.QUERY_TRANSACTION_HISTORY_MAX_TRANSACTION_COUNT);
+
+        final JsonObject reply = getHttpClient().executeGetRequestForJsonReply(sbRequestUrl.toString());
+        log.info("Transaction history queried successfully for {}", querySettings);
+        return reply;
     }
 
     @Override
-    public JsonObject queryTransactionData(final TransactionDetailLinksExtractor.Link url) {
-        throw new NotImplementedException("queryTransactionData");
+    public JsonObject queryTransactionData(final TransactionDetailLinksExtractor.Link url) throws IOException {
+        checkAuthenticated();
+
+        final JsonObject reply = getHttpClient().executeGetRequestForJsonReply(url.getUrl());
+        log.info("Transaction data queried successfully for {}", url.getUrl());
+        return reply;
     }
 
     @Override
     public void logout() {
+        // TODO
         throw new NotImplementedException("logout");
+    }
+
+    private URI makeUri(final String url) throws IOException {
+        final URI uri;
+        try {
+            uri = new URI(url);
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
+        return uri;
+    }
+
+    private boolean isSuccess(final String responseHtml) {
+        return !StringUtils.contains(responseHtml, "Hibás bejelentkezési kísérlet")
+               && !StringUtils.contains(responseHtml, "Authentication Failed");
+    }
+
+    private void checkAuthenticated() {
+        if (!isAuthenticated()) {
+            throw new IllegalStateException("User not authenticated!");
+        }
     }
 
 }

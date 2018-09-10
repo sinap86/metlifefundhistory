@@ -22,7 +22,11 @@ public class Constants {
 
     public static final NumberFormat NUMBER_FORMAT_HU = NumberFormat.getInstance(LOCALE_HU);
 
-    public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+    public static final DateTimeFormatter DATE_FORMATTER_DOTTED = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
+    public static final DateTimeFormatter DATE_FORMATTER_DASHED = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public static final DateTimeFormatter RESULT_FILE_NAME_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd_HHmm");
+
+    public static final int QUERY_TRANSACTION_HISTORY_MAX_TRANSACTION_COUNT = 10000;
 }

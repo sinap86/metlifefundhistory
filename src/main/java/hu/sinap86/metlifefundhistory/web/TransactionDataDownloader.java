@@ -49,10 +49,16 @@ public class TransactionDataDownloader extends SwingWorker<Void, Void> {
     private void download() throws TransactionDataDownloadException {
         log.debug("download started.");
 
-        final JsonObject transactionList = webSessionManager.queryTransactionHistory(querySettings);
+        final JsonObject transactionList;
+        try {
+            transactionList = webSessionManager.queryTransactionHistory(querySettings);
+        } catch (IOException e) {
+            throw new TransactionDataDownloadException(e);
+        }
         if (transactionList == null) {
             throw new TransactionDataDownloadException();
         }
+
         if (isCancelled()) {
             log.debug("download cancelled.");
             return;
@@ -69,11 +75,11 @@ public class TransactionDataDownloader extends SwingWorker<Void, Void> {
                     break;
                 }
                 final TransactionDetailLinksExtractor.Link detailLink = detailLinks.get(i);
+                log.debug("downloading '{}' transaction, number: {}", detailLink.getGroup(), detailLink.getTransactionNumber());
 
                 final JsonObject transactionData = webSessionManager.queryTransactionData(detailLink);
                 final File transactionDataFile = getFile(querySettings.getTransactionHistoryDirectory(), detailLink);
                 writeToFile(transactionData, transactionDataFile);
-                log.debug("downloaded '{}' transaction, number: {}", detailLink.getGroup(), detailLink.getTransactionNumber());
 
                 setProgress(TRANSACTION_LIST_QUERY_PROGRESS + (int) ((i + 1) * progressStep));
             }
