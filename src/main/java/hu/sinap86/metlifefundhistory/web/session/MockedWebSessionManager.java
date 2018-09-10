@@ -35,6 +35,8 @@ public class MockedWebSessionManager implements WebSessionManager {
 
     @Override
     public List<FundRate> getFundRates(final Contract contract, final LocalDate queryDate) throws IOException {
+        delay(3000);
+        log.info("{} exchange rate(s) for {} extracted from online response.", fundRates.size(), queryDate);
         return fundRates;
     }
 

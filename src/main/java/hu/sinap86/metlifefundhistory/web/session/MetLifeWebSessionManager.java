@@ -75,7 +75,7 @@ public class MetLifeWebSessionManager implements WebSessionManager {
         final String responseHtml = getHttpClient().execute(rateRequest);
 
         final List<FundRate> fundRates = extractRatesFromHtml(responseHtml);
-        log.info("{} exchange rate(s) extracted from online response.", fundRates);
+        log.info("{} exchange rate(s) for {} extracted from online response.", fundRates.size(), queryDateStr);
         return fundRates;
     }
 

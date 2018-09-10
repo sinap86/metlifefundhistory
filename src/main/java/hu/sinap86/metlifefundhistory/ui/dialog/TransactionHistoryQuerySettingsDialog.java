@@ -67,7 +67,7 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
 
         addLabel("Végdátum:", querySettingsPanel, 2, 0);
 
-        dpToDate = createDatePicker();
+        dpToDate = createDatePicker(LocalDate.now());
         dpToDate.setDateToToday();
         addComponent(dpToDate, querySettingsPanel, 2, 1, 2);
 
@@ -101,6 +101,7 @@ public class TransactionHistoryQuerySettingsDialog extends BaseDialog {
                         .fromDate(dpFromDate.getDate())
                         .toDate(dpToDate.getDate())
                         .useOnlineRates(rateSettingsPanel.useOnlineRates())
+                        .rateDate(rateSettingsPanel.useOnlineRates() ? rateSettingsPanel.getRateDate() : null)
                         .rateFile(rateSettingsPanel.getRateFile())
                         .transactionHistoryDirectory(transactionHistoryDirectory)
                         .build();

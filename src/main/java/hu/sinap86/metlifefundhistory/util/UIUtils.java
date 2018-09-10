@@ -11,6 +11,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -92,13 +93,21 @@ public class UIUtils {
     }
 
     public static DatePicker createDatePicker() {
+        return createDatePicker(null);
+    }
+
+    public static DatePicker createDatePicker(final LocalDate lastAllowedDate) {
         final DatePickerSettings dateSettings = new DatePickerSettings(Constants.LOCALE_HU);
         dateSettings.setFirstDayOfWeek(DayOfWeek.MONDAY);
         dateSettings.setTranslationToday("Ma");
         dateSettings.setTranslationClear("Töröl");
         dateSettings.setFormatForDatesCommonEra("yyyy/MM/dd");
         dateSettings.setFormatForDatesBeforeCommonEra("uuuu/MM/dd");
-        return new DatePicker(dateSettings);
+        final DatePicker datePicker = new DatePicker(dateSettings);
+        if (lastAllowedDate != null) {
+            dateSettings.setDateRangeLimits(null, lastAllowedDate);
+        }
+        return datePicker;
     }
 
     public static void addFocusTraversalKey(final Container container, final int key) {

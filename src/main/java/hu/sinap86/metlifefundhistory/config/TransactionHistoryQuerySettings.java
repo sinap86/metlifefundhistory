@@ -27,6 +27,11 @@ public class TransactionHistoryQuerySettings extends ReportGeneratorSettings {
             return this;
         }
 
+        public TransactionHistoryQuerySettingsBuilder rateDate(LocalDate rateDate) {
+            toBuild.rateDate = rateDate;
+            return this;
+        }
+
         public TransactionHistoryQuerySettingsBuilder rateFile(File rateFile) {
             toBuild.rateFile = rateFile;
             return this;

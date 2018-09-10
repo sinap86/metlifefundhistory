@@ -60,6 +60,7 @@ public class ReportGeneratorSettingsDialog extends BaseDialog {
             if (validateUserInput()) {
                 querySettings = ReportGeneratorSettings.builder()
                         .useOnlineRates(rateSettingsPanel.useOnlineRates())
+                        .rateDate(rateSettingsPanel.useOnlineRates() ? rateSettingsPanel.getRateDate() : null)
                         .rateFile(rateSettingsPanel.getRateFile())
                         .transactionHistoryDirectory(transactionHistoryDirectory)
                         .build();

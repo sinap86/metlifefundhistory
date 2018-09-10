@@ -79,7 +79,7 @@ public class FundReportGenerator extends SwingWorker<Void, Void> {
     }
 
     private Result persist(final Contract contract) throws IOException {
-        final RateProvider rateProvider = settings.isUseOnlineRates() ? new OnlineRateProvider(contract) :
+        final RateProvider rateProvider = settings.isUseOnlineRates() ? new OnlineRateProvider(contract, settings.getRateDate()) :
                                           new FileRateProvider(settings.getRateFile());
         log.debug("Rates provided for active funds.");
 

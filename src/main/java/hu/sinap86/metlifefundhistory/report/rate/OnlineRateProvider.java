@@ -23,11 +23,12 @@ public class OnlineRateProvider implements RateProvider {
     private final WebSessionManager webSessionManager;
     private boolean ratesLoadedSuccessfully;
 
-    public OnlineRateProvider(final Contract contract) throws IOException {
-        CommonUtils.checkNotNull(contract.getType(), "contractTypeNumber");
-        CommonUtils.checkNotNull(contract.getCurrency(), "currency");
+    public OnlineRateProvider(final Contract contract, final LocalDate queryDate) throws IOException {
+        CommonUtils.checkNotNull(contract, "contract");
+        CommonUtils.checkNotNull(contract.getType(), "contract.contractTypeNumber");
+        CommonUtils.checkNotNull(contract.getCurrency(), "contract.currency");
+        CommonUtils.checkNotNull(queryDate, "queryDate");
 
-        final LocalDate queryDate = LocalDate.now().minusDays(1);
         rateDateString = queryDate.format(Constants.DATE_FORMATTER_DOTTED);
 
         webSessionManager = new MetLifeWebSessionManager();

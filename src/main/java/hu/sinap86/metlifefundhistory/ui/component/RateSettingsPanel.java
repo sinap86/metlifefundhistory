@@ -4,21 +4,30 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.io.File;
+import java.time.LocalDate;
 
 import static hu.sinap86.metlifefundhistory.util.UIUtils.*;
+
+import com.github.lgooddatepicker.components.DatePicker;
 
 public class RateSettingsPanel extends JPanel {
 
     private final JCheckBox chkUseOnlineRates;
     private final JButton btnChooseRateFile;
 
+    private DatePicker dpRateDate;
     private File rateFile;
 
     public RateSettingsPanel() {
         super(new GridBagLayout());
 
-        chkUseOnlineRates = new JCheckBox("Online árfolyamok aktív alapoknál");
-        addComponent(chkUseOnlineRates, this, 0, 0, 3);
+        chkUseOnlineRates = new JCheckBox("Online árfolyam:");
+        addComponent(chkUseOnlineRates, this, 0, 0);
+
+        dpRateDate = createDatePicker(LocalDate.now());
+        dpRateDate.setDateToToday();
+        dpRateDate.setEnabled(false);
+        addComponent(dpRateDate, this, 0, 1, 2);
 
         final JLabel lblRateFile = addLabel("Árfolyamok betöltése innen:", this, 1, 0);
         lblRateFile.setPreferredSize(new Dimension(180, 26));
@@ -37,7 +46,9 @@ public class RateSettingsPanel extends JPanel {
         addComponent(btnChooseRateFile, this, 1, 2);
 
         chkUseOnlineRates.addItemListener((ItemEvent event) -> {
-            btnChooseRateFile.setEnabled(event.getStateChange() == ItemEvent.DESELECTED);
+            final boolean useOnlineRates = event.getStateChange() == ItemEvent.SELECTED;
+            dpRateDate.setEnabled(useOnlineRates);
+            btnChooseRateFile.setEnabled(!useOnlineRates);
             repaint();
         });
 
@@ -45,7 +56,12 @@ public class RateSettingsPanel extends JPanel {
     }
 
     public String validateUserInputAndGetErrorMessage() {
-        if (!chkUseOnlineRates.isSelected() && rateFile == null) {
+        final boolean useOnlineRates = useOnlineRates();
+        if (useOnlineRates && dpRateDate.getDate() == null) {
+            dpRateDate.getComponentToggleCalendarButton().requestFocus();
+            return "Nincs árfolyam lekérdezési dátum kiválasztva!";
+        }
+        if (!useOnlineRates && rateFile == null) {
             btnChooseRateFile.requestFocus();
             return "Nincs árfolyam fájl kiválasztva!";
         }
@@ -60,8 +76,11 @@ public class RateSettingsPanel extends JPanel {
         return rateFile;
     }
 
-
     public boolean useOnlineRates() {
         return chkUseOnlineRates.isSelected();
+    }
+
+    public LocalDate getRateDate() {
+        return dpRateDate.getDate();
     }
 }
