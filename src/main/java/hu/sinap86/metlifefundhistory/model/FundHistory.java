@@ -31,14 +31,8 @@ public class FundHistory {
     public BigDecimal getTotalBalance() {
         Collections.sort(historyElements);
 
-        // add the sumAmount of elements except the last one
-        BigDecimal amountSum = BigDecimal.ZERO;
-        for (int i = 0; i < historyElements.size() - 1; i++) {
-            amountSum = amountSum.add(historyElements.get(i).getSumAmount());
-        }
-        // negate the last element's sumAmount and subtract the previous elements' sumAmount from it
-        final HistoryElement lastElement = historyElements.get(historyElements.size() - 1);
-        return lastElement.getSumAmount().negate().subtract(amountSum);
+        final BigDecimal amountSum = historyElements.stream().map(HistoryElement::getSumAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return amountSum.negate();
     }
 
     public BigDecimal getTotalBalance(final BigDecimal rate) {
