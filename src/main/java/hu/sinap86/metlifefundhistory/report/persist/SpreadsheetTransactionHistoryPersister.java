@@ -1,10 +1,5 @@
 package hu.sinap86.metlifefundhistory.report.persist;
 
-import static hu.sinap86.metlifefundhistory.util.XLSUtils.createCell;
-import static hu.sinap86.metlifefundhistory.util.XLSUtils.nextRow;
-import static hu.sinap86.metlifefundhistory.util.XLSUtils.setColumnWidths;
-import static hu.sinap86.metlifefundhistory.util.XLSUtils.writeCells;
-
 import hu.sinap86.metlifefundhistory.model.Contract;
 import hu.sinap86.metlifefundhistory.model.FundHistory;
 import hu.sinap86.metlifefundhistory.model.HistoryElement;
@@ -16,18 +11,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFColor;
-import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -39,7 +25,7 @@ import java.util.List;
 import java.util.function.Function;
 
 @Slf4j
-public class SpreadsheetTransactionHistoryPersister {
+public class SpreadsheetTransactionHistoryPersister extends BaseXSSFHandler {
 
     @Data
     @Builder
@@ -55,31 +41,16 @@ public class SpreadsheetTransactionHistoryPersister {
         private boolean fundSold;
     }
 
-    private static final String CELL_STYLE_UNIT = "#,##0.#####";
-    private static final String CELL_STYLE_RATE = "0.#####";
-    private static final String CELL_STYLE_AMOUNT = "#,##0 Ft";
-    private static final String CELL_STYLE_PERCENT = "0.##%";
-
     private final File resultFile;
     private final RateProvider rateProvider;
-    private final XSSFWorkbook workbook;
     private final List<String> warnings = new ArrayList<>();
-    private CellStyle sheetHeaderCellStyle;
+
     private XSSFSheet summarySheet;
 
     public SpreadsheetTransactionHistoryPersister(final File resultFile, final RateProvider rateProvider) {
         this.resultFile = resultFile;
         this.rateProvider = rateProvider;
-        this.workbook = new XSSFWorkbook();
-        initStyles();
         initSummarySheet();
-    }
-
-    private void initStyles() {
-        this.sheetHeaderCellStyle = createCellStyle(null, null, true, false);
-        sheetHeaderCellStyle.setWrapText(true);
-        sheetHeaderCellStyle.setAlignment(HorizontalAlignment.CENTER);
-        sheetHeaderCellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
     }
 
     private void initSummarySheet() {
@@ -98,7 +69,7 @@ public class SpreadsheetTransactionHistoryPersister {
         setColumnWidths(summarySheet, columnWidths);
 
         final XSSFRow row = nextRow(summarySheet, 0);
-        writeCells(row, sheetHeaderCellStyle, (Object[]) headerTexts);
+        writeCells(row, Style.TEXT_SHEET_HEADER, (Object[]) headerTexts);
 
         summarySheet.createFreezePane(0, 1);
     }
@@ -107,9 +78,6 @@ public class SpreadsheetTransactionHistoryPersister {
         CommonUtils.checkNotNull(contract, "contract");
         warnings.clear();
 
-        final CellStyle unitStyle = createCellStyle(CELL_STYLE_UNIT);
-        final CellStyle rateStyle = createCellStyle(CELL_STYLE_RATE);
-        final CellStyle amountStyle = createCellStyle(CELL_STYLE_AMOUNT);
         final List<FundHistorySummary> fundHistorySummaryList = Lists.newArrayList();
 
         final List<FundHistory> fundHistories = contract.getFundHistories();
@@ -123,9 +91,9 @@ public class SpreadsheetTransactionHistoryPersister {
                 final XSSFRow row = nextRow(fundSheet);
 
                 createCell(row, historyElement.getPriceDate());
-                createCell(row, historyElement.getSumOfUnits(), unitStyle);
-                createCell(row, historyElement.getRate(), rateStyle);
-                createCell(row, historyElement.getSumAmount(), amountStyle);
+                createCell(row, historyElement.getSumOfUnits(), Style.UNIT);
+                createCell(row, historyElement.getRate(), Style.RATE);
+                createCell(row, historyElement.getSumAmount(), Style.AMOUNT);
                 createCell(row, historyElement.getTransactionName());
             }
 
@@ -149,7 +117,7 @@ public class SpreadsheetTransactionHistoryPersister {
         setColumnWidths(sheet, 30, 30, 20, 20, 30);
 
         final XSSFRow row = nextRow(sheet, 0);
-        writeCells(row, sheetHeaderCellStyle, "Használt árfolyam napja", "Kezdeti és felhalmozási egységek száma (db)", "Egységárfolyam", "Összeg", "Művelet");
+        writeCells(row, Style.TEXT_SHEET_HEADER, "Használt árfolyam napja", "Kezdeti és felhalmozási egységek száma (db)", "Egységárfolyam", "Összeg", "Művelet");
 
         sheet.createFreezePane(0, 1);
     }
@@ -204,80 +172,124 @@ public class SpreadsheetTransactionHistoryPersister {
             return;
         }
 
-        final Color color = getColor(fundHistorySummary.totalBalance);
-        final CellStyle boldBordered = createBoldBorderedCellStyle();
+        final Style textStyle = Style.TEXT_BOLD_BORDERED;
+        final Style coloredAmountStyle = fundHistorySummary.totalBalance.compareTo(BigDecimal.ZERO) >= 0 ? Style.AMOUNT_BOLD_BORDERED_GREEN : Style.AMOUNT_BOLD_BORDERED_RED;
+        final Style coloredPercentStyle = fundHistorySummary.averageInterestRate.compareTo(BigDecimal.ZERO) >= 0 ? Style.PERCENT_BOLD_BORDERED_GREEN : Style.PERCENT_BOLD_BORDERED_RED;
 
         XSSFRow row = nextRow(sheet);
-        createCell(row, fundHistorySummary.rate == null ? "Záró mérleg" : String.format("Mérleg %s-n", rateProvider.getRateDate()), boldBordered);
-        createCell(row, StringUtils.EMPTY, boldBordered);
-        createCell(row, fundHistorySummary.rate, boldBordered);
-        createCell(row, fundHistorySummary.totalBalance, createBoldBorderedCellStyle(CELL_STYLE_AMOUNT, color));
-        createCell(row, StringUtils.EMPTY, boldBordered);
+        createCell(row, fundHistorySummary.rate == null ? "Záró mérleg" : String.format("Mérleg %s-n", rateProvider.getRateDate()), textStyle);
+        createCell(row, StringUtils.EMPTY, textStyle);
+        createCell(row, fundHistorySummary.rate, textStyle);
+        createCell(row, fundHistorySummary.totalBalance, coloredAmountStyle);
+        createCell(row, StringUtils.EMPTY, textStyle);
 
         row = nextRow(sheet);
-        createCell(row, "Átlagos éves kamat", boldBordered);
-        createCell(row, StringUtils.EMPTY, boldBordered);
-        createCell(row, StringUtils.EMPTY, boldBordered);
-        createCell(row, fundHistorySummary.averageInterestRate, createBoldBorderedCellStyle(CELL_STYLE_PERCENT, color));
-        createCell(row, StringUtils.EMPTY, boldBordered);
+        createCell(row, "Átlagos éves kamat", textStyle);
+        createCell(row, StringUtils.EMPTY, textStyle);
+        createCell(row, StringUtils.EMPTY, textStyle);
+        createCell(row, fundHistorySummary.averageInterestRate, coloredPercentStyle);
+        createCell(row, StringUtils.EMPTY, textStyle);
     }
 
     private void createSummarySheetRow(final FundHistorySummary fundHistorySummary) {
         final boolean notSold = !fundHistorySummary.fundSold;
-        final Color color = getColor(fundHistorySummary.totalBalance);
-        final CellStyle cellStyleText = createCellStyle(null, notSold);
-        final CellStyle cellStyleRedText = createCellStyle(null, Color.RED, notSold);
-        final CellStyle cellStyleAmount = createCellStyle(CELL_STYLE_AMOUNT, notSold);
+
+        final Style textStyle = fundHistorySummary.fundSold ? Style.TEXT : Style.TEXT_BOLD_ITALIC;
+        final Style amountStyle = fundHistorySummary.fundSold ? Style.AMOUNT : Style.AMOUNT_BOLD_ITALIC;
+        final Style coloredAmountStyle = getColoredAmountStyle(fundHistorySummary.totalBalance, fundHistorySummary.fundSold);
+        final Style coloredPercentStyle = getColoredPercentStyle(fundHistorySummary.averageInterestRate, fundHistorySummary.fundSold);
 
         final XSSFRow row = nextRow(summarySheet);
-        createCell(row, fundHistorySummary.fundName, cellStyleText);
-        createCell(row, fundHistorySummary.depositSum, cellStyleAmount);
-        createCell(row, fundHistorySummary.reductionSum, cellStyleAmount);
+        createCell(row, fundHistorySummary.fundName, textStyle);
+        createCell(row, fundHistorySummary.depositSum, amountStyle);
+        createCell(row, fundHistorySummary.reductionSum, amountStyle);
 
         if (notSold && !rateProvider.isRatesLoadedSuccessfully()) {
             // no rates are available for active funds
-            createCell(row, StringUtils.EMPTY, cellStyleText);
-            createCell(row, StringUtils.EMPTY, cellStyleText);
+            createCell(row, StringUtils.EMPTY, textStyle);
+            createCell(row, StringUtils.EMPTY, textStyle);
         } else {
             // fund was sold or (active and rates are available)
             if (rateProvider.isRatesLoadedSuccessfully()) {
-                createCell(row, fundHistorySummary.currentValue, cellStyleAmount);
+                createCell(row, fundHistorySummary.currentValue, amountStyle);
             }
-            createCell(row, fundHistorySummary.totalBalance, createCellStyle(CELL_STYLE_AMOUNT, color, notSold));
-            createCell(row, fundHistorySummary.averageInterestRate, createCellStyle(CELL_STYLE_PERCENT, color, notSold));
+            createCell(row, fundHistorySummary.totalBalance, coloredAmountStyle);
+            createCell(row, fundHistorySummary.averageInterestRate, coloredPercentStyle);
         }
         if (notSold) {
             if (rateProvider.isRatesLoadedSuccessfully() && fundHistorySummary.currentValue != null) {
-                createCell(row, String.format("%s-i állapot szerint", rateProvider.getRateDate()), cellStyleText);
+                createCell(row, String.format("%s-i állapot szerint", rateProvider.getRateDate()), textStyle);
             } else {
-                createCell(row, "Hiányzó árfolyam", cellStyleRedText);
+                createCell(row, "Hiányzó árfolyam", Style.TEXT_RED);
+            }
+        }
+    }
+
+    private Style getColoredAmountStyle(final BigDecimal number, final boolean isSimple) {
+        if (number == null) {
+            return Style.AMOUNT;
+        }
+
+        final boolean isPositive = number.compareTo(BigDecimal.ZERO) >= 0;
+        if (isPositive) {
+            if (isSimple) {
+                return Style.AMOUNT_GREEN;
+            } else {
+                return Style.AMOUNT_BOLD_ITALIC_GREEN;
+            }
+        } else {
+            if (isSimple) {
+                return Style.AMOUNT_RED;
+            } else {
+                return Style.AMOUNT_BOLD_ITALIC_RED;
+            }
+        }
+    }
+
+    private Style getColoredPercentStyle(final BigDecimal number, final boolean isSimple) {
+        if (number == null) {
+            return Style.PERCENT;
+        }
+
+        final boolean isPositive = number.compareTo(BigDecimal.ZERO) >= 0;
+        if (isPositive) {
+            if (isSimple) {
+                return Style.PERCENT_GREEN;
+            } else {
+                return Style.PERCENT_BOLD_ITALIC_GREEN;
+            }
+        } else {
+            if (isSimple) {
+                return Style.PERCENT_RED;
+            } else {
+                return Style.PERCENT_BOLD_ITALIC_RED;
             }
         }
     }
 
     private void createSummarySheetTotalRow(final List<FundHistorySummary> fundHistorySummaryList) {
-        final CellStyle boldBordered = createBoldBorderedCellStyle();
-        final CellStyle boldBorderedAmount = createBoldBorderedCellStyle(CELL_STYLE_AMOUNT);
+        final Style textStyle = Style.TEXT_BOLD_BORDERED;
+        final Style amountStyle = Style.AMOUNT_BOLD_BORDERED;
 
         final boolean hasAtLeastOneActiveFundWithoutRate = fundHistorySummaryList.stream().anyMatch(s -> !s.fundSold && s.getRate() == null);
 
         final XSSFRow row = nextRow(summarySheet);
-        createCell(row, "Össezsen", boldBordered);
-        createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getDepositSum), boldBorderedAmount);
-        createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getReductionSum), boldBorderedAmount);
+        createCell(row, "Össezsen", textStyle);
+        createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getDepositSum), amountStyle);
+        createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getReductionSum), amountStyle);
         if (rateProvider.isRatesLoadedSuccessfully()) {
             if (hasAtLeastOneActiveFundWithoutRate) {
-                createCell(row, StringUtils.EMPTY, boldBordered);
+                createCell(row, StringUtils.EMPTY, textStyle);
             } else {
-                createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getCurrentValue), boldBorderedAmount);
+                createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getCurrentValue), amountStyle);
             }
         }
         if (hasAtLeastOneActiveFundWithoutRate) {
-            createCell(row, StringUtils.EMPTY, boldBordered);
+            createCell(row, StringUtils.EMPTY, textStyle);
         } else {
-            createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getTotalBalance), boldBorderedAmount);
+            createCell(row, sum(fundHistorySummaryList, FundHistorySummary::getTotalBalance), amountStyle);
         }
-        createCell(row, null, boldBordered);
+        createCell(row, null, textStyle);
 
     }
 
@@ -299,65 +311,4 @@ public class SpreadsheetTransactionHistoryPersister {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private Color getColor(final BigDecimal amountSum) {
-        if (amountSum == null) {
-            return Color.BLACK;
-        }
-        final Color color;
-        final int compare = amountSum.compareTo(BigDecimal.ZERO);
-        if (compare < 0) {
-            color = Color.RED;
-        } else if (compare > 0) {
-            color = new Color(0, 102, 0);
-        } else {
-            color = Color.BLACK;
-        }
-        return color;
-    }
-
-    private CellStyle createBoldBorderedCellStyle() {
-        return createBoldBorderedCellStyle(null);
-    }
-
-    private CellStyle createBoldBorderedCellStyle(final String format) {
-        return createBoldBorderedCellStyle(format, null);
-    }
-
-    private CellStyle createBoldBorderedCellStyle(final String format, final Color color) {
-        final CellStyle cellStyle = createCellStyle(format, color, true, false);
-        cellStyle.setBorderBottom(BorderStyle.THIN);
-        cellStyle.setBorderTop(BorderStyle.THIN);
-        return cellStyle;
-    }
-
-    private CellStyle createCellStyle(final String format) {
-        return createCellStyle(format, null, false, false);
-    }
-
-    private CellStyle createCellStyle(final String format, final boolean boldAndItalic) {
-        return createCellStyle(format, null, boldAndItalic);
-    }
-
-    private CellStyle createCellStyle(final String format, final Color color, final boolean boldAndItalic) {
-        return createCellStyle(format, color, boldAndItalic, boldAndItalic);
-    }
-
-    private CellStyle createCellStyle(final String format, final Color color, final boolean bold, final boolean italic) {
-        final XSSFCellStyle cellStyle = workbook.createCellStyle();
-        if (StringUtils.isNotEmpty(format)) {
-            cellStyle.setDataFormat(workbook.createDataFormat().getFormat(format));
-        }
-        final XSSFFont font = workbook.createFont();
-        cellStyle.setFont(font);
-        if (bold) {
-            font.setBold(true);
-        }
-        if (italic) {
-            font.setItalic(true);
-        }
-        if (color != null) {
-            font.setColor(new XSSFColor(color));
-        }
-        return cellStyle;
-    }
 }
