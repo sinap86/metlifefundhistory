@@ -50,7 +50,7 @@ public class ApplicationFrame extends JFrame {
         usageDescriptionPanel = createUsageDescription();
 
         setTitle("MetLife tranzakció történet elemző");
-        setSize(500, 400);
+        setSize(550, 400);
         setLocationRelativeTo(null);
         addWindowListener(new WindowAdapter() {
             @Override

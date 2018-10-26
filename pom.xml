@@ -76,4 +76,31 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <!--
+        Generate HTML file from README.md file.
+          NOTE: the HTML page will be shown on the application's main screen.
+      -->
+      <plugin>
+        <groupId>com.ruleoftech</groupId>
+        <artifactId>markdown-page-generator-plugin</artifactId>
+        <version>2.1.0</version>
+        <executions>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <inputDirectory>${project.basedir}</inputDirectory>
+          <outputDirectory>${project.build.directory}/classes</outputDirectory>
+          <pegdownExtensions>TABLES,FENCED_CODE_BLOCKS</pegdownExtensions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>

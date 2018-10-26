@@ -28,7 +28,7 @@ public class LoginDialog extends BaseDialog {
     private JButton btnLogin;
 
     public LoginDialog(final JFrame owner, final WebSessionManager webSessionManager) {
-        super(owner, "Bejelentkezés", true);
+        super(owner, "MyMetLife Bejelentkezés", true);
         this.webSessionManager = webSessionManager;
 
         final boolean authenticationWithPasswordSucceeded = webSessionManager.isAuthenticationWithPasswordSucceeded();

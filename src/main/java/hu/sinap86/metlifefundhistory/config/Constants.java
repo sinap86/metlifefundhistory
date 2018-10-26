@@ -12,7 +12,7 @@ public class Constants {
 
     public static final String[] SUPPORTED_PROXY_SCHEMES = new String[]{ "http", "https" };
 
-    public static final String USAGE_DESCRIPTION_FILE = "usage_description.html";
+    public static final String USAGE_DESCRIPTION_FILE = "README.html";
 
     public static final String JSON_FILE_EXTENSION = ".json";
 
