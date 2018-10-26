@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>hu.sinap86</groupId>
@@ -79,7 +79,7 @@
   <build>
     <plugins>
       <!--
-        Generate HTML file from README.md file.
+        Generate HTML from README.md file.
           NOTE: the HTML page will be shown on the application's main screen.
       -->
       <plugin>
@@ -99,6 +99,39 @@
           <outputDirectory>${project.build.directory}/classes</outputDirectory>
           <pegdownExtensions>TABLES,FENCED_CODE_BLOCKS</pegdownExtensions>
         </configuration>
+      </plugin>
+      <!--
+        Create runnable jar file.
+          NOTE: the runnable jar file is used in the run-metlifefundhistory*.bat files.
+      -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>hu.sinap86.metlifefundhistory.MetLifeFundHistoryApplication</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id> <!-- this is used for inheritance merges -->
+            <phase>package</phase> <!-- bind to the packaging phase -->
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+              <finalName>${artifactId}-runnable</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

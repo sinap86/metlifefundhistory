@@ -2,7 +2,7 @@
 <configuration>
 
   <property name="PATTERN" value="%d{yy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n"/>
-  <property name="LOG_DIR" value="data"/>
+  <property name="LOG_DIR" value="."/>
   <property name="FILE_NAME" value="metlifefundhistory.log"/>
   <property name="APP_NAME" value="${project.groupId}>"/>
   <property name="APP_VERSION" value="${project.version}"/>

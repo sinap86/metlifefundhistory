@@ -1,0 +1,1 @@
+java -Dfile.encoding=UTF-8 -Ddump.response=true -Ddump.cookies=true -jar target\metlifehistory-runnable.jar
